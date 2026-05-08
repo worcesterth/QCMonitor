@@ -32,7 +32,7 @@ jobs:
 
       - name: Build EXE
         run: |
-          pyinstaller --noconfirm --onedir --windowed `
+          pyinstaller --noconfirm --onefile --windowed `
             --name "DesktopQC" `
             --icon "app_icon.ico" `
             --add-data "assets;assets" `
@@ -41,15 +41,11 @@ jobs:
             --hidden-import "PIL._tkinter_finder" `
             main.py
 
-      - name: Zip output folder
-        run: |
-          Compress-Archive -Path dist\DesktopQC -DestinationPath dist\DesktopQC-windows.zip
-
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v5
         with:
           name: DesktopQC-windows
-          path: dist\DesktopQC-windows.zip
+          path: dist/DesktopQC.exe
 
   build-macos:
     runs-on: macos-latest
