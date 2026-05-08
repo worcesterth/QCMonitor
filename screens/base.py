@@ -1,3 +1,4 @@
+import re as _re
 import tkinter as tk
 import platform
 
@@ -41,6 +42,50 @@ def thai_font(size: int = 14, weight: str = "normal") -> tuple:
 
     bold = "bold" if weight == "bold" else "normal"
     return (family, size, bold)
+
+
+def strip_markup(text: str) -> str:
+    """Strip <u>...</u> markup tags, returning plain text."""
+    return _re.sub(r'</?u>', '', text)
+
+
+def rich_label(parent, text, font, fg, bg, padx=0, pady=0,
+               anchor="nw", justify="left"):
+    """
+    Returns a tk.Label for plain text, or a read-only tk.Text widget when
+    text contains <u>...</u> markup (renders underlined spans).
+    """
+    if "<u>" not in text:
+        return tk.Label(parent, text=text, font=font, fg=fg, bg=bg,
+                        anchor=anchor, justify=justify,
+                        padx=padx, pady=pady)
+
+    parts = _re.split(r'(<u>.*?</u>)', text, flags=_re.DOTALL)
+
+    txt = tk.Text(parent, font=font, fg=fg, bg=bg,
+                  relief="flat", bd=0, highlightthickness=0,
+                  padx=padx, pady=pady, cursor="arrow",
+                  wrap="word", width=1, height=1)
+    txt.tag_configure("u", underline=True)
+
+    for part in parts:
+        if part.startswith("<u>") and part.endswith("</u>"):
+            txt.insert("end", part[3:-4], "u")
+        else:
+            if part:
+                txt.insert("end", part)
+
+    txt.configure(state="disabled")
+
+    def _fit_height():
+        try:
+            nlines = txt.count("1.0", "end", "displaylines")[0]
+            txt.configure(height=max(1, nlines))
+        except Exception:
+            pass
+
+    txt.bind("<Configure>", lambda _e: txt.after_idle(_fit_height))
+    return txt
 
 
 def bind_treeview_tooltip(tree):

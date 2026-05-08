@@ -90,7 +90,7 @@ class HistoryResultScreen(BaseScreen):
                          self._export_pdf, fontsize=self.fs(26), width=16).pack(side="left", padx=4)
         self.primary_btn(btn_bar, "พิมพ์",
                          self._print_result, fontsize=self.fs(26), width=10).pack(side="left", padx=4)
-        self.back_btn(btn_bar, "กลับประวัติ",
+        self.back_btn(btn_bar, "กลับ",
                       lambda: app.show("history"), fontsize=self.fs(26), width=14).pack(side="right", padx=4)
 
     # ── table helpers ─────────────────────────────────────────────────────

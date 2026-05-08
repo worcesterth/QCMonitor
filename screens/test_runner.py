@@ -1,4 +1,5 @@
 import os
+import re
 import glob
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -107,10 +108,17 @@ class TestRunnerScreen(BaseScreen):
         body = tk.Frame(self.card_win, bg=CARD_COLOR)
         body.pack(fill="x", expand=False, padx=12, pady=8)
 
-        self.item_lbl = tk.Label(body, text="", font=thai_font(self.fs(26)),
-                                 bg=CARD_COLOR, fg=TEXT_COLOR,
-                                 wraplength=int(520 * self._s), justify="left", anchor="w")
-        self.item_lbl.pack(anchor="w", pady=(0, 8))
+        self.item_lbl = tk.Text(
+            body, font=thai_font(self.fs(26)),
+            bg=CARD_COLOR, fg=TEXT_COLOR,
+            relief="flat", bd=0, highlightthickness=0,
+            wrap="word", width=1, height=1,
+            cursor="arrow", state="disabled",
+        )
+        self.item_lbl.tag_configure("u", underline=True)
+        self.item_lbl.pack(anchor="w", fill="x", pady=(0, 8))
+        self.item_lbl.bind("<Configure>",
+                           lambda _e: self.item_lbl.after_idle(self._fit_item_lbl_height))
 
         q_row = tk.Frame(body, bg=CARD_COLOR)
         q_row.pack(anchor="w", pady=(0, 6))
@@ -156,6 +164,26 @@ class TestRunnerScreen(BaseScreen):
         self.prev_btn.pack(side="right", padx=2)
         self.replay_btn.pack(side="left", padx=2)
 
+    # ── Item label helpers ────────────────────────────────────────────────
+
+    def _update_item_lbl(self, text: str):
+        self.item_lbl.configure(state="normal")
+        self.item_lbl.delete("1.0", "end")
+        for part in re.split(r'(<u>.*?</u>)', text, flags=re.DOTALL):
+            if part.startswith("<u>") and part.endswith("</u>"):
+                self.item_lbl.insert("end", part[3:-4], "u")
+            elif part:
+                self.item_lbl.insert("end", part)
+        self.item_lbl.configure(state="disabled")
+        self.item_lbl.after_idle(self._fit_item_lbl_height)
+
+    def _fit_item_lbl_height(self):
+        try:
+            nlines = self.item_lbl.count("1.0", "end", "displaylines")[0]
+            self.item_lbl.configure(height=max(1, nlines))
+        except Exception:
+            pass
+
     # ── Window helpers ────────────────────────────────────────────────────
 
     def _show_card_win(self):
@@ -184,7 +212,7 @@ class TestRunnerScreen(BaseScreen):
         criterion = item.get("pass_criterion", "")
         title     = item.get("title", "")
         display   = f"{title}: {criterion}" if criterion else title
-        self.item_lbl.configure(text=display)
+        self._update_item_lbl(display)
         self.card_win.title(item.get("group_title_Q", item.get("group_title", "")))
         self._draw_badge(f"ข้อ {idx+1}/{total}")
 
@@ -209,14 +237,23 @@ class TestRunnerScreen(BaseScreen):
 
         self._load_image(self._resolve_image(item))
         self._setup_channels(item, saved)
+        self._fit_card_win()
 
         inner = self.prev_btn.winfo_children()
         if inner:
             inner[0].configure(fg="#aaaaaa" if idx == 0 else TEXT_COLOR)
 
+    def _fit_card_win(self):
+        self.card_win.update_idletasks()
+        w = max(self.card_win.winfo_reqwidth(),  self.card_win.winfo_width())
+        h = self.card_win.winfo_reqheight()
+        x = self.card_win.winfo_x()
+        y = self.card_win.winfo_y()
+        self.card_win.geometry(f"{w}x{h}+{x}+{y}")
+
     def _show_uniformity_intro(self, on_next, on_prev):
         dlg = tk.Toplevel(self.app)
-        dlg.title("")
+        dlg.title("สำหรับการประเมินในหัวข้อถัดไป")
         dlg.resizable(False, False)
         dlg.configure(bg=CARD_COLOR)
         dlg.transient(self.app)
@@ -237,7 +274,7 @@ class TestRunnerScreen(BaseScreen):
                  ).pack(anchor="w", padx=24, pady=(24, 10))
 
         body = (
-            "มองเห็นไม่เห็นจุดที่ไม่สม่ำเสมอหรือจุดด่างในแต่ละระดับค่า pixel ที่แสดง "
+            "สังเกตหาจุดที่ไม่สม่ำเสมอหรือจุดด่างในแต่ละระดับค่า pixel ที่แสดง "
             "ซึ่งภาพที่แสดงต่อไปนี้เป็นภาพที่มีระดับค่า pixel ตั้งแต่ 0-255 "
             "โปรดมองอย่างละเอียดแล้วทำการเลื่อนเมาส์ดูภาพตั้งแต่ภาพที่แสดงค่า pixel ตั้งแต่ 0 "
             "ถึงภาพที่แสดงค่า pixel เท่ากับ 255"
@@ -394,7 +431,9 @@ class TestRunnerScreen(BaseScreen):
         total_ch   = item.get("total_channels", 18)
         saved_fail = saved.get("failed_channels", [])
 
-        tk.Label(self.channels_outer, text="ระบุช่องที่มองไม่เห็น:",
+        _row_ids = {"mod_lum_lines_3m", "clin_lum_lines_3m", "diag_lum_lines_3m"}
+        _ch_label = "ระบุแถวที่มองไม่เห็น:" if item.get("item_id") in _row_ids else "ระบุช่องที่มองไม่เห็น:"
+        tk.Label(self.channels_outer, text=_ch_label,
                  font=thai_font(self.fs(22)), bg=CARD_COLOR, fg=TEXT_COLOR
                  ).grid(row=0, column=0, columnspan=9, sticky="w", pady=(4, 2))
 
@@ -421,6 +460,7 @@ class TestRunnerScreen(BaseScreen):
                 w.grid_remove()
             self.channels_outer.configure(height=1)
             self.channels_outer.pack_propagate(False)
+        self.card_win.after_idle(self._fit_card_win)
 
     # ── Answer / Nav ─────────────────────────────────────────────────────
 
@@ -428,7 +468,7 @@ class TestRunnerScreen(BaseScreen):
         self._warn_lbl.pack_forget()
         if self._has_channels:
             self._show_channels(self._answer_var.get() == "fail")
-        self.card_win.update()
+        self.card_win.after_idle(self._fit_card_win)
 
     def _save_current(self):
         session = self.app.session
@@ -468,6 +508,7 @@ class TestRunnerScreen(BaseScreen):
     def _next(self):
         if not self._answer_var.get():
             self._warn_lbl.pack(anchor="w", pady=(0, 4))
+            self._fit_card_win()
             return
         if self._has_channels and self._answer_var.get() == "fail":
             if self._has_text_ch:
@@ -476,11 +517,13 @@ class TestRunnerScreen(BaseScreen):
                 if not parts:
                     self._warn_lbl.configure(text="*กรุณาระบุค่าที่ไม่ผ่านอย่างน้อย 1 ค่า (0–255)")
                     self._warn_lbl.pack(anchor="w", pady=(0, 4))
+                    self._fit_card_win()
                     return
             else:
                 if not any(v.get() for v in self.ch_vars):
                     self._warn_lbl.configure(text="*กรุณาเลือกช่องที่มองไม่เห็นอย่างน้อย 1 ช่อง")
                     self._warn_lbl.pack(anchor="w", pady=(0, 4))
+                    self._fit_card_win()
                     return
         self._warn_lbl.configure(text="*กรุณาตอบคำถาม")
         self._save_current()

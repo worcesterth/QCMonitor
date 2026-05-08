@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from screens.base import (
     BaseScreen, BG_COLOR, CARD_COLOR, TEXT_COLOR, BORDER_CLR, thai_font,
+    rich_label,
 )
 from config import TEST_CONFIG, SCREEN_TYPES, PERIOD_LABELS
 
@@ -101,15 +102,15 @@ class CriteriaScreen(BaseScreen):
             r[0] += 1
 
         def _cell(text, col, bg, font, colspan=1):
-            lbl = tk.Label(self._body, text=text, font=font, fg=TEXT_COLOR, bg=bg,
-                           anchor="nw", justify="left",
-                           padx=_PAD_X, pady=_PAD_Y, wraplength=200)
-            lbl.grid(row=r[0], column=col,
-                     columnspan=colspan, sticky="nsew")
-            lbl.bind("<Configure>",
-                     lambda e, l=lbl: l.configure(
-                         wraplength=max(60, e.width - _PAD_X * 2)))
-            return lbl
+            w = rich_label(self._body, text=text, font=font, fg=TEXT_COLOR, bg=bg,
+                           padx=_PAD_X, pady=_PAD_Y)
+            w.grid(row=r[0], column=col, columnspan=colspan, sticky="nsew")
+            if isinstance(w, tk.Label):
+                w.configure(wraplength=200)
+                w.bind("<Configure>",
+                       lambda e, l=w: l.configure(
+                           wraplength=max(60, e.width - _PAD_X * 2)))
+            return w
 
         # ── header row ────────────────────────────────────────────────
         font_h = thai_font(26, "bold")

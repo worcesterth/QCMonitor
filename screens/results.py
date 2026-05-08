@@ -154,7 +154,7 @@ class ResultsScreen(BaseScreen):
                     fc = ans["failed_channels"]
                     ch_str = ", ".join(str(c) for c in fc)
                     if item.get("question_type") == "yes_no_channels_text":
-                        notes = (f"จำนวนภาไที่ Pixel ไม่สม่ำเสมอ: {len(fc)} ภาพ\n"
+                        notes = (f"จำนวนภาพที่ Pixel ไม่สม่ำเสมอ: {len(fc)} ภาพ\n"
                                  f"ค่า Pixel ของภาพที่ไม่เห็น: {ch_str}") + (f"  {notes}" if notes else "")
                     else:
                         notes = f"ค่า Pixel ของช่องที่ไม่เห็น: {ch_str}" + (f"  {notes}" if notes else "")

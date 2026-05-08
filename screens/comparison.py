@@ -35,7 +35,7 @@ CLR_NO_ANS   = "#94a3b8"   # ไม่มีข้อมูล – slate
 
 ALT_ROW      = "#f5f5f5"   # สีแถวสลับ (ขาวอมเทาอ่อน)
 
-_HEADS   = ["หัวข้อประเมิน", "Baseline", "ครั้งที่",
+_HEADS   = ["หัวข้อประเมิน", "Baseline", "ครั้งนี้",
             "ผลการเปรียบเทียบ", "คำอธิบายเพิ่มเติมจากการเปรียบเทียบ"]
 _WIDTHS_REF = [290, 140, 140, 320]   # reference widths at 1920×1080
 _ANCHORS = ["w", "center", "center", "w", "w"]
@@ -358,7 +358,8 @@ def _compare_result(item: dict, b_ans, c_ans) -> tuple[str, str, str]:
 
     # ทั้งคู่ไม่ผ่าน
     if qtype == "yes_no":
-        return "ผลการประเมินไม่ผ่านทั้งคู่", "same", "-"
+        desc = "ผลการประเมินไม่ผ่านทั้งคู่"
+        return "คุณภาพของหน้าจอเท่าเดิม", "same", desc
 
     # yes_no_channels / yes_no_channels_text — เปรียบเทียบจำนวนช่องที่ไม่ผ่าน
     b_fc = len(b_ans.get("failed_channels", []))
