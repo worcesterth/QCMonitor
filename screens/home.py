@@ -47,6 +47,14 @@ class HomeScreen(BaseScreen):
         dev_lbl.bind("<Enter>", lambda _: dev_lbl.configure(fg=TEXT_COLOR))
         dev_lbl.bind("<Leave>", lambda _: dev_lbl.configure(fg="#888888"))
 
+        ref_lbl = tk.Label(bottom, text="เอกสารอ้างอิง ▸",
+                           font=thai_font(self.fs(18)), bg=CARD_COLOR,
+                           fg="#888888", cursor="hand2")
+        ref_lbl.pack(side="right", padx=(0, 16))
+        ref_lbl.bind("<ButtonRelease-1>", lambda _: self._show_references())
+        ref_lbl.bind("<Enter>", lambda _: ref_lbl.configure(fg=TEXT_COLOR))
+        ref_lbl.bind("<Leave>", lambda _: ref_lbl.configure(fg="#888888"))
+
         # ── body ────────────────────────────────────────────────────────
         body = tk.Frame(card, bg=CARD_COLOR)
         body.pack(fill="both", expand=True)
@@ -82,6 +90,59 @@ class HomeScreen(BaseScreen):
             command=lambda: app.show("register"),
             width=20, fontsize=self.fs(40), pady=10, padx=20,
         ).pack(pady=(14, 0))
+
+    # ── เอกสารอ้างอิง popup ─────────────────────────────────────────────
+
+    def _show_references(self):
+        dlg = tk.Toplevel(self.app)
+        dlg.title("เอกสารอ้างอิง")
+        dlg.configure(bg=CARD_COLOR)
+        dlg.resizable(False, False)
+        dlg.transient(self.app)
+        dlg.grab_set()
+
+        w, h = int(780 * self._s), int(480 * self._s)
+        px = self.app.winfo_x() + self.app.winfo_width()  // 2 - w // 2
+        py = self.app.winfo_y() + self.app.winfo_height() // 2 - h // 2
+        dlg.geometry(f"{w}x{h}+{px}+{py}")
+
+        hdr = tk.Frame(dlg, bg="#474747", height=38)
+        hdr.pack(fill="x")
+        hdr.pack_propagate(False)
+        tk.Label(hdr, text="เอกสารอ้างอิง", font=thai_font(self.fs(20), "bold"),
+                 bg="#474747", fg="#FFFFFF").pack(side="left", padx=16, pady=10)
+
+        content = tk.Frame(dlg, bg=CARD_COLOR)
+        content.pack(fill="both", expand=True, padx=24, pady=16)
+
+        refs = [
+            ("1.", "Bevins NB, Badano A, et al. Display Quality Assurance - The Report of AAPM Task Group 270. "
+                   "American Association of Physicists in Medicine. Alexandria; 2019,\n"
+                   "https://www.aapm.org/pubs/reports/RPT_270.pdf"),
+            ("2.", "International Atomic Energy Agency. IAEA Human Health Series No. 47 - Handbook of Basic Quality Control Tests for Diagnostic Radiology. "
+                   "Vienna; 2023,\n"
+                   "https://www-pub.iaea.org/MTCD/Publications/PDF/PUB2021_web.pdf"),
+            ("3.", "กรมวิทยาศาสตร์การแพทย์ กระทรวงสาธารณสุข. การควบคุมคุณภาพเครื่องเอกซเรย์วินิจฉัยทางการแพทย์. "
+                   "นนทบุรี: กรมวิทยาศาสตร์การแพทย์; 2022."),
+            ("4.", "American College of Radiology, American Association of Physicists in Medicine, Society for Imaging Informatics in Medicine. "
+                   "ACR-AAPM-SIIM Technical Standard for Electronic Practice of Medical Imaging. "
+                   "Reston (VA): American College of Radiology; 2022,\n"
+                   "https://gravitas.acr.org/PPTS/GetDocumentView?docId=136"),
+        ]
+
+        for num, text in refs:
+            row = tk.Frame(content, bg=CARD_COLOR)
+            row.pack(fill="x", pady=(0, 14), anchor="w")
+            tk.Label(row, text=num, font=thai_font(self.fs(20), "bold"),
+                     bg=CARD_COLOR, fg=TEXT_COLOR, anchor="nw", width=3).pack(side="left", anchor="nw")
+            tk.Label(row, text=text, font=thai_font(self.fs(18)),
+                     bg=CARD_COLOR, fg="#555555", anchor="w",
+                     justify="left", wraplength=int(680 * self._s)).pack(side="left", anchor="nw")
+
+        btn_bar = tk.Frame(dlg, bg=CARD_COLOR)
+        btn_bar.pack(fill="x", padx=24, pady=(0, 16))
+        self.primary_btn(btn_bar, "ปิด", dlg.destroy,
+                         fontsize=self.fs(22), width=10).pack(side="right")
 
     # ── ทีมผู้พัฒนา popup ───────────────────────────────────────────────
 
