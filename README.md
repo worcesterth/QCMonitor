@@ -1,6 +1,6 @@
-# Desktop1QC — ระบบประกันคุณภาพจอภาพทางการแพทย์ (TG-270 Monitor QC System)
+# MonitorQC — ระบบประกันคุณภาพจอภาพทางการแพทย์ (TG-270 Monitor QC System)
 
-โปรแกรม Desktop QC สำหรับประเมินคุณภาพจอภาพทางการแพทย์ตามมาตรฐาน **TG-270** รองรับ 3 ชนิดหน้าจอ ครอบคลุมทุกรอบการประเมิน บันทึกผลลงฐานข้อมูล และสร้างรายงาน PDF/Excel
+โปรแกรม Monitor QC สำหรับประเมินคุณภาพจอภาพทางการแพทย์ตามมาตรฐาน **TG-270** รองรับ 4 ชนิดหน้าจอ ครอบคลุมทุกรอบการประเมิน บันทึกผลลงฐานข้อมูล และสร้างรายงาน PDF/Excel
 
 ---
 
@@ -14,7 +14,7 @@
 | PDF | ReportLab + THSarabunNew.ttf |
 | Excel | openpyxl |
 | ฐานข้อมูล | SQLite (`data/screenqc.db`) |
-| Build | PyInstaller (onedir) — Windows EXE & macOS .app |
+| Build | PyInstaller (onefile) — Windows EXE & macOS .app |
 | CI/CD | GitHub Actions (push → main → build artifacts) |
 
 ---
@@ -34,10 +34,9 @@ python main.py
 ## โครงสร้างไฟล์
 
 ```
-Desktop1QC/
+MonitorQC/
 ├── main.py              # Entry point — ติดตั้งฟอนต์ไทย, สร้าง Tk window, ลงทะเบียน screens
 ├── config.py            # TEST_CONFIG, SCREEN_TYPES, PERIODS, PERIOD_LABELS
-├── app.py               # มี TEST_CONFIG ชุดที่ 2 (คนละชุดกับ config.py — ระวังซ้ำซ้อน)
 ├── database.py          # SQLite ORM-like: init_db, users, evaluations, answers
 ├── patterns.py          # สร้าง test pattern image แบบ fallback ด้วย Pillow
 │
@@ -46,15 +45,15 @@ Desktop1QC/
 │   ├── home.py          # หน้าแรก (โลโก้ + ปุ่มนำทาง)
 │   ├── select_type.py   # เลือกชนิดหน้าจอ
 │   ├── select_period.py # เลือกรอบการประเมิน (พร้อม color bar แสดงสี period)
-│   ├── login.py         # ล็อกอิน + แสดงข้อมูลโรงพยาบาล/หน้าจอ
-│   ├── confirm.py       # ยืนยัน metadata ก่อนเริ่มทดสอบ
+│   ├── login.py         # ล็อกอิน + แสดงข้อมูลโรงพยาบาล/หน้าจอ (color bar ตาม period)
+│   ├── confirm.py       # ยืนยัน metadata ก่อนเริ่มทดสอบ (color bar ตาม period)
 │   ├── instructions.py  # คำแนะนำก่อนทดสอบ (warm-up, ระยะดู, ทำความสะอาด)
 │   ├── test_runner.py   # หน้าทำข้อสอบ — แสดงรูป, ตอบ yes/no, ระบุช่องที่ fail
 │   ├── results.py       # ตารางผลการประเมิน (pass/fail รายข้อ) — Canvas-based
 │   ├── after_save.py    # สรุปหลังบันทึก — ตั้ง baseline, พิมพ์, ดูเกณฑ์
 │   ├── criteria.py      # ตารางเกณฑ์การประเมินและวิธีแก้ไข (กรองตามชนิดหน้าจอ)
 │   ├── comparison.py    # เปรียบเทียบผลกับ baseline — export PDF
-│   ├── history.py       # ค้นหาประวัติการประเมิน (filter วันที่)
+│   ├── history.py       # ค้นหาประวัติการประเมิน (filter วันที่, ชนิดหน้าจอ)
 │   ├── history_result.py# ดูผลการประเมินในอดีต (Canvas-based)
 │   ├── register.py      # ตั้งค่าครั้งแรก (ชื่อโรงพยาบาล, รุ่นหน้าจอ, สร้าง user แรก)
 │   └── user_list.py     # จัดการผู้ใช้ (เพิ่ม/แก้ไข/ลบ)
@@ -62,7 +61,7 @@ Desktop1QC/
 ├── assets/
 │   ├── fonts/THSarabunNew.ttf   # ฟอนต์ไทย (bundled)
 │   ├── logo/                    # โลโก้แอป (.png, .icns, .ico)
-│   └── test_patterns/           # รูปแบบทดสอบ ~30 ไฟล์ (PNG/TIFF)
+│   └── test_patterns/           # รูปแบบทดสอบ (PNG/TIFF)
 │
 ├── reports/
 │   └── pdf_export.py    # สร้าง PDF ด้วย ReportLab (landscape A4)
@@ -83,7 +82,8 @@ Desktop1QC/
 |-----|----------|
 | `diagnostic` | หน้าจอชนิดใช้วินิจฉัยทางการแพทย์ (Diagnostic) |
 | `modality` | หน้าจอชนิดใช้แสดงทางการแพทย์ (Modality) |
-| `clinic` | หน้าจอตรวจทานทางการแพทย์ / EHR |
+| `clinic` | หน้าจอตรวจทานทางการแพทย์ (Clinical Review) |
+| `ehr` | หน้าจอระบบเวชระเบียนอิเล็กทรอนิกส์ (Electronic Health Record) |
 
 ### รอบการประเมิน (`PERIODS`)
 | ชนิดหน้าจอ | รอบที่รองรับ |
@@ -91,14 +91,16 @@ Desktop1QC/
 | diagnostic | monthly, quarterly |
 | modality | monthly, quarterly, annual |
 | clinic | annual |
+| ehr | annual |
 
 ### `TEST_CONFIG` — โครงสร้างแต่ละ test item
 ```python
 {
     "item_id":        "diag_lum_patches_m",      # unique ID สำหรับบันทึก DB
     "title":          "1.1) การประเมิน...",       # หัวข้อที่แสดงในหน้าทดสอบ
+    "criteria_title": "1.1) ...",                 # หัวข้อที่แสดงในหน้าเปรียบเทียบ (comparison)
     "image_index":    1,                           # ชี้ไปยัง assets/test_patterns/
-    "question_type":  "yes_no",                   # "yes_no" หรือ "yes_no_channels"
+    "question_type":  "yes_no",                   # "yes_no" หรือ "yes_no_channels" หรือ "yes_no_channels_text"
     "total_channels": 18,                          # (เฉพาะ yes_no_channels)
     "pass_criterion": "...",                       # เกณฑ์ผ่าน (รองรับ <u>text</u>)
     "fix_guide":      "...",                       # วิธีแก้ไขกรณีไม่ผ่าน
@@ -107,6 +109,13 @@ Desktop1QC/
 ```
 
 **Markup รองรับใน `pass_criterion`:** `<u>ข้อความ</u>` → แสดงขีดเส้นใต้ในหน้า criteria
+
+**`question_type` ที่รองรับ:**
+| ค่า | การแสดงผล |
+|-----|----------|
+| `yes_no` | ปุ่ม ผ่าน / ไม่ผ่าน |
+| `yes_no_channels` | ปุ่ม ผ่าน / ไม่ผ่าน + checkbox ระบุช่องที่ fail (กำหนดจำนวนด้วย `total_channels`) |
+| `yes_no_channels_text` | ปุ่ม ผ่าน / ไม่ผ่าน + text field ระบุช่องหรือช่วงที่ fail (เช่น `2-23, 34, 50`) |
 
 ---
 
@@ -134,7 +143,7 @@ CREATE TABLE evaluations (
     hospital_name   TEXT    NOT NULL,
     evaluator_name  TEXT    NOT NULL,
     screen_model    TEXT    NOT NULL,
-    screen_type     TEXT    NOT NULL,  -- diagnostic / modality / clinic
+    screen_type     TEXT    NOT NULL,  -- diagnostic / modality / clinic / ehr
     period          TEXT    NOT NULL,  -- monthly / quarterly / annual
     eval_datetime   TEXT    NOT NULL,  -- "DD/MM/YYYY HH:MM"
     overall_pass    INTEGER NOT NULL,  -- 1=ผ่าน, 0=ไม่ผ่าน
@@ -154,8 +163,8 @@ CREATE TABLE answers (
 
 **ตำแหน่ง DB:**
 - Dev: `<project>/data/screenqc.db`
-- macOS bundle: `~/Library/Application Support/DesktopQC/data/screenqc.db`
-- Windows bundle: `%APPDATA%/DesktopQC/data/screenqc.db`
+- macOS bundle: `~/Library/Application Support/MonitorQC/data/screenqc.db`
+- Windows bundle: `%APPDATA%/MonitorQC/data/screenqc.db`
 
 ---
 
@@ -169,10 +178,10 @@ home → select_type → select_period → login → confirm → instructions
 ```
 
 1. **home** — เลือกเริ่มประเมิน หรือดูประวัติ หรือจัดการผู้ใช้
-2. **select_type** — เลือกชนิดหน้าจอ (3 แบบ)
+2. **select_type** — เลือกชนิดหน้าจอ (4 แบบ)
 3. **select_period** — เลือกรอบ (แสดง color bar ตาม period)
-4. **login** — ใส่รหัสผ่าน
-5. **confirm** — ยืนยันข้อมูลก่อนเริ่ม
+4. **login** — ใส่รหัสผ่าน (แสดง color bar ตาม period)
+5. **confirm** — ยืนยันข้อมูลก่อนเริ่ม (แสดง color bar ตาม period)
 6. **instructions** — อ่านคำแนะนำ
 7. **test_runner** — ทำข้อสอบทีละข้อ (แสดงรูป + ตอบคำถาม)
 8. **results** — ดูผล pass/fail รายข้อ
@@ -186,15 +195,17 @@ home → select_type → select_period → login → confirm → instructions
 |---------|-----------|
 | **Multi-user** | หลายผู้ใช้ มี password; จัดการผ่าน user_list screen |
 | **Test runner** | แสดง test pattern PNG/TIFF, slider เลือก frame, ตอบ yes/no |
-| **Channel tracking** | บันทึกช่องที่ fail (18 ช่อง) ด้วย JSON array ใน DB |
+| **Channel tracking** | บันทึกช่องที่ fail ด้วย JSON array ใน DB (checkbox หรือ text input) |
+| **Range input** | ระบุช่อง fail แบบช่วงได้ เช่น `2-23, 34, 40-42, 55` |
 | **Baseline** | กำหนดผลการประเมินใดก็ได้เป็น baseline สำหรับเปรียบเทียบ |
 | **Comparison** | เทียบผลปัจจุบัน vs baseline ทีละข้อ แยก drift A/B |
-| **History** | ค้นหาประวัติด้วย date range filter |
+| **History** | ค้นหาประวัติด้วย date range + ชนิดหน้าจอ filter |
 | **PDF report** | สร้าง PDF landscape A4 ด้วย ReportLab + ฟอนต์ไทย |
 | **Excel export** | export ผลเป็น .xlsx ด้วย openpyxl |
 | **Rich text** | `<u>text</u>` ใน pass_criterion → ขีดเส้นใต้ในหน้า criteria |
 | **Canvas table** | results & history_result ใช้ Canvas-based table (text wrap) |
 | **Responsive UI** | scale ทุก font/size จาก reference 1920×1080 |
+| **Period color bar** | select_period, login, confirm แสดงแถบสีตาม period (น้ำเงิน/เขียว/ส้ม) |
 
 ---
 
@@ -216,17 +227,17 @@ home → select_type → select_period → login → confirm → instructions
 
 ```bash
 # Windows
-pyinstaller --noconfirm --onedir --windowed --name "DesktopQC" \
+pyinstaller --noconfirm --onefile --windowed --name "MonitorQC" \
   --add-data "assets;assets" --add-data "screens;screens" --add-data "reports;reports" \
   --hidden-import "PIL._tkinter_finder" main.py
 
 # macOS
-pyinstaller --noconfirm --onedir --windowed --name "DesktopQC" \
+pyinstaller --noconfirm --onedir --windowed --name "MonitorQC" \
   --add-data "assets:assets" --add-data "screens:screens" --add-data "reports:reports" \
   --hidden-import "PIL._tkinter_finder" main.py
 ```
 
-GitHub Actions build อัตโนมัติทุก push to main → สร้าง artifacts `DesktopQC-windows.zip` และ `DesktopQC-macos.zip`
+GitHub Actions build อัตโนมัติทุก push to main → สร้าง artifacts `MonitorQC-windows` (`.exe`) และ `MonitorQC-macos` (`.zip`)
 
 ---
 
@@ -234,10 +245,15 @@ GitHub Actions build อัตโนมัติทุก push to main → ส�
 
 | การเปลี่ยนแปลง | ไฟล์ที่เกี่ยวข้อง |
 |---------------|----------------|
+| เพิ่ม EHR เป็นชนิดหน้าจอแยกต่างหาก (annual, item IDs ขึ้นต้นด้วย `ehr_`) | `config.py`, `screens/login.py`, `screens/confirm.py`, `screens/history.py` |
+| เพิ่มฟิลด์ `criteria_title` ในทุก config item สำหรับแสดงในหน้า comparison | `config.py`, `screens/comparison.py` |
+| รองรับ range input ในช่อง uniformity (เช่น `2-23, 34, 40-42`) | `screens/test_runner.py` |
+| แก้ `image_index` ถูก override ด้วย sequential counter ใน instructions.py | `screens/instructions.py` |
+| เพิ่ม color bar ตาม period ใน confirm screen (เหมือน login) | `screens/confirm.py` |
 | เพิ่ม color bar ใน login screen และปุ่ม period มีสี | `screens/login.py`, `screens/select_period.py` |
 | เปลี่ยน Treeview เป็น Canvas-based table (รองรับ text wrap) | `screens/results.py`, `screens/history_result.py` |
 | เพิ่ม tooltip แสดงข้อความเต็มเมื่อ hover ใน Treeview | `screens/base.py` |
 | รองรับ `<u>text</u>` markup ใน pass_criterion (ขีดเส้นใต้) | `screens/base.py`, `screens/criteria.py`, `screens/test_runner.py` |
-| ขีดเส้นใต้คำว่า "เปิดไฟ" ใน item `diag_amb_lum_3m` | `config.py` line 87 |
-| แก้ Windows build เป็น onedir (แก้ temp dir cleanup warning) | `.github/workflows/build.yml` |
+| แก้ Windows build เป็น onefile | `.github/workflows/build.yml` |
 | อัปเกรด GitHub Actions เป็น Node.js 24 compatible | `.github/workflows/build.yml` |
+| เปลี่ยนชื่อ build artifact จาก DesktopQC เป็น MonitorQC | `.github/workflows/build.yml` |
