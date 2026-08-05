@@ -33,7 +33,7 @@ jobs:
       - name: Build EXE
         run: |
           pyinstaller --noconfirm --onefile --windowed `
-            --name "DesktopQC" `
+            --name "MonitorQC" `
             --icon "app_icon.ico" `
             --add-data "assets;assets" `
             --add-data "screens;screens" `
@@ -44,8 +44,8 @@ jobs:
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v5
         with:
-          name: DesktopQC-windows
-          path: dist/DesktopQC.exe
+          name: MonitorQC-windows
+          path: dist/MonitorQC.exe
 
   build-macos:
     runs-on: macos-latest
@@ -66,7 +66,7 @@ jobs:
       - name: Build macOS App
         run: |
           pyinstaller --noconfirm --onedir --windowed \
-            --name "DesktopQC" \
+            --name "MonitorQC" \
             --icon "assets/logo/AppIcon.icns" \
             --add-data "assets:assets" \
             --add-data "screens:screens" \
@@ -77,10 +77,10 @@ jobs:
       - name: Zip .app bundle
         run: |
           cd dist
-          zip -r DesktopQC-macos.zip DesktopQC.app
+          zip -r MonitorQC-macos.zip MonitorQC.app
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v5
         with:
-          name: DesktopQC-macos
-          path: dist/DesktopQC-macos.zip
+          name: MonitorQC-macos
+          path: dist/MonitorQC-macos.zip
