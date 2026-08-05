@@ -211,7 +211,7 @@ class HistoryScreen(BaseScreen):
         screen_type_frame = tk.Frame(search_inner, bg=CARD_COLOR)
         screen_type_frame.grid(row=0, column=3, sticky="ew", padx=(0, 24), pady=8)
         self.screen_type_var = tk.StringVar(value="")
-        screen_type_choices = [("ทั้งหมด", "")] + [("Diagnostic", "diagnostic"), ("Modality", "modality"), ("Clinical", "clinic")]
+        screen_type_choices = [("ทั้งหมด", "")] + [("Diagnostic", "diagnostic"), ("Modality", "modality"), ("Clinical", "clinic"), ("EHR", "ehr")]
         self._screen_type_menu = self._build_optionmenu(screen_type_frame, self.screen_type_var, screen_type_choices)
         self._screen_type_menu.pack(fill="x", expand=True)
 
@@ -372,7 +372,7 @@ class HistoryScreen(BaseScreen):
         self._rows = rows
         self.tree.delete(*self.tree.get_children())
 
-        type_map   = {"diagnostic": "Diagnostic", "modality": "Modality", "clinic": "Clinical"}
+        type_map   = {"diagnostic": "Diagnostic", "modality": "Modality", "clinic": "Clinical", "ehr": "EHR"}
         period_map = {"monthly": "รายเดือน", "quarterly": "ราย 3 เดือน", "annual": "ประจำปี"}
 
         for r in rows:

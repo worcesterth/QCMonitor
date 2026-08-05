@@ -7,19 +7,21 @@ class SelectTypeScreen(BaseScreen):
         super().__init__(parent, app)
 
         card = self.card(self)
-        card.place(relx=0.5, rely=0.5, anchor="center", width=self.CARD_W, height=self.CARD_HL)
+        card_h = max(500, int(760 * self._s))
+        card.place(relx=0.5, rely=0.5, anchor="center", width=self.CARD_W, height=card_h)
 
         self.card_header(card, "โปรแกรมตรวจคุณภาพหน้าจอ", size=self.fs(24))
 
         body = tk.Frame(card, bg=CARD_COLOR)
         body.pack(fill="both", expand=True)
 
-        self.title_label(body, "โปรดเลือกชนิดหน้าจอ", size=self.fs(36)).pack(pady=(32, 36))
+        self.title_label(body, "โปรดเลือกชนิดหน้าจอ", size=self.fs(36)).pack(pady=(20, 20))
 
         types = [
-            ("diagnostic", "หน้าจอชนิดใช้วินิจฉัยทางการแพทย์\n(Diagnostic)"),
-            ("modality",   "หน้าจอชนิดใช้แสดงทางการแพทย์\n(Modality)"),
-            ("clinic",     "หน้าจอตรวจทานทางการแพทย์และหน้าจอสำหรับงานเวชระเบียน \n(Clinical Review & Electronic Health Record)"),
+            ("diagnostic", "หน้าจอชนิดใช้วินิจฉัยทางการแพทย์\n(Diagnostic display)"),
+            ("modality",   "หน้าจอชนิดใช้แสดงทางการแพทย์\n(Modality display)"),
+            ("clinic",     "หน้าจอตรวจทานทางการแพทย์\n(Clinical Review display)"),
+            ("ehr",        "หน้าจอสำหรับงานเวชระเบียน\n(Electronic Health Record display)"),
         ]
 
         for key, label in types:
@@ -28,7 +30,7 @@ class SelectTypeScreen(BaseScreen):
                 command=lambda k=key: self._select(k),
                 fontsize=self.fs(32), padx=20, pady=6,
                 width=46,
-            ).pack(pady=8)
+            ).pack(pady=5)
 
         bottom = tk.Frame(card, bg=CARD_COLOR)
         bottom.pack(side="bottom", fill="x", padx=16, pady=12)

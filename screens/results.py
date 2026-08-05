@@ -8,7 +8,7 @@ from screens.base import (
 
 _HEADS      = ["หัวข้อการประเมิน", "ผลการประเมิน", "หมายเหตุ"]
 _ANCHORS    = ["w", "center", "w"]
-_WIDTHS_REF = [500, 140]   # คอลัมน์สุดท้าย (หมายเหตุ) flexible
+_WIDTHS_REF = [620, 140]   # คอลัมน์สุดท้าย (หมายเหตุ) flexible
 ALT_ROW     = "#f5f5f5"
 
 

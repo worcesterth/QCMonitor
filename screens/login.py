@@ -106,7 +106,7 @@ class LoginScreen(BaseScreen):
         screen_type = session.get("screen_type", "")
         period_lbl = PERIOD_LABELS.get(period, period)
         type_map = {"diagnostic": "Diagnostic", "modality": "Modality",
-                    "clinic": "Clinical Review"}
+                    "clinic": "Clinical Review", "ehr": "Electronic Health Record"}
         period_colors = {"monthly": "#3b82f6", "quarterly": "#16a34a", "annual": "#f97316"}
         bar_color = period_colors.get(period, "#888888")
         self._period_bar.configure(bg=bar_color)

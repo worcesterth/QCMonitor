@@ -101,7 +101,7 @@ class HomeScreen(BaseScreen):
         dlg.transient(self.app)
         dlg.grab_set()
 
-        w, h = int(780 * self._s), int(480 * self._s)
+        w, h = int(780 * self._s), int(640 * self._s)
         px = self.app.winfo_x() + self.app.winfo_width()  // 2 - w // 2
         py = self.app.winfo_y() + self.app.winfo_height() // 2 - h // 2
         dlg.geometry(f"{w}x{h}+{px}+{py}")
@@ -111,6 +111,11 @@ class HomeScreen(BaseScreen):
         hdr.pack_propagate(False)
         tk.Label(hdr, text="เอกสารอ้างอิง", font=thai_font(self.fs(20), "bold"),
                  bg="#474747", fg="#FFFFFF").pack(side="left", padx=16, pady=10)
+
+        btn_bar = tk.Frame(dlg, bg=CARD_COLOR)
+        btn_bar.pack(side="bottom", fill="x", padx=24, pady=(0, 16))
+        self.primary_btn(btn_bar, "ปิด", dlg.destroy,
+                         fontsize=self.fs(22), width=10).pack(side="right")
 
         content = tk.Frame(dlg, bg=CARD_COLOR)
         content.pack(fill="both", expand=True, padx=24, pady=16)
@@ -139,10 +144,6 @@ class HomeScreen(BaseScreen):
                      bg=CARD_COLOR, fg="#555555", anchor="w",
                      justify="left", wraplength=int(680 * self._s)).pack(side="left", anchor="nw")
 
-        btn_bar = tk.Frame(dlg, bg=CARD_COLOR)
-        btn_bar.pack(fill="x", padx=24, pady=(0, 16))
-        self.primary_btn(btn_bar, "ปิด", dlg.destroy,
-                         fontsize=self.fs(22), width=10).pack(side="right")
 
     # ── ทีมผู้พัฒนา popup ───────────────────────────────────────────────
 
@@ -154,7 +155,7 @@ class HomeScreen(BaseScreen):
         dlg.transient(self.app)
         dlg.grab_set()
 
-        w, h = int(520 * self._s), int(380 * self._s)
+        w, h = int(640 * self._s), int(660 * self._s)
         px = self.app.winfo_x() + self.app.winfo_width()  // 2 - w // 2
         py = self.app.winfo_y() + self.app.winfo_height() // 2 - h // 2
         dlg.geometry(f"{w}x{h}+{px}+{py}")
@@ -166,31 +167,52 @@ class HomeScreen(BaseScreen):
         tk.Label(hdr, text="ทีมผู้พัฒนา", font=thai_font(self.fs(20), "bold"),
                  bg="#474747", fg="#FFFFFF").pack(side="left", padx=16, pady=10)
 
+        # close (pack before content so it's not pushed off)
+        btn_bar = tk.Frame(dlg, bg=CARD_COLOR)
+        btn_bar.pack(side="bottom", fill="x", padx=24, pady=(0, 16))
+        self.primary_btn(btn_bar, "ปิด", dlg.destroy,
+                         fontsize=self.fs(22), width=10).pack(side="right")
+
         # content
         content = tk.Frame(dlg, bg=CARD_COLOR)
         content.pack(fill="both", expand=True, padx=28, pady=20)
 
         members = [
-            # ("ที่ปรึกษา",     ""),
-            # ("",               ""),
-            ("ผู้พัฒนาระบบ", "1. นายณัฐวุฒิ โรจน์บุณถึง\n2. นายอธิวัฒน์ ยศปัญญา\n  3. นางสาววรฤทัย มหาวงษ์"),
-        #     ("",               ""),
-        #     ("สังกัด",         "ภาควิชาวิทยาการคอมพิวเตอร์ คณะวิทยาศาสต  มหาวิทยาลัยนเรศวร"),
-       
+            ("ที่ปรึกษา", [
+                "ผู้ช่วยศาสตราจารย์ ดร.ธัญรัตน์ ชูศิลป์",
+                "ผู้ช่วยศาสตราจารย์ ดร.สุธาสินี ฉิมเล็ก",
+            ]),
+            ("ผู้พัฒนาระบบ", [
+                "นางสาวชำนิกานต์ แก้วนา",
+                "นายภาณุวิชญ์ จันเสนา",
+                "นายณัฐวุฒิ โรจน์บุณถึง",
+                "นายอธิวัฒน์ ยศปัญญา",
+                "นางสาววรฤทัย มหาวงษ์",
+            ]),
         ]
-        for role, name in members:
+        for role, names in members:
+            tk.Label(content, text=role, font=thai_font(self.fs(22), "bold"),
+                     bg=CARD_COLOR, fg=TEXT_COLOR, anchor="w").pack(anchor="w", pady=(6, 0))
+            for name in names:
+                tk.Label(content, text=f"   {name}", font=thai_font(self.fs(20)),
+                         bg=CARD_COLOR, fg="#555555", anchor="w").pack(anchor="w", pady=1)
+
+        # contact
+        tk.Frame(content, bg="#dddddd", height=1).pack(fill="x", pady=(12, 8))
+        tk.Label(content, text="หากมีข้อสงสัยเกี่ยวกับการประเมินสามารถติดต่อได้ที่:",
+                 font=thai_font(self.fs(20), "bold"), bg=CARD_COLOR, fg=TEXT_COLOR,
+                 anchor="w").pack(anchor="w")
+
+        contacts = [
+            ("1. ผู้ช่วยศาสตราจารย์ ดร.ธัญรัตน์ ชูศิลป์ ", "thunyarutc@nu.ac.th"),
+            ("2. นางสาวชำนิกานต์ แก้วนา", "chumnikarnk66@nu.ac.th"),
+            ("3. นายภาณุวิชญ์ จันเสนา", "panuwitj66@nu.ac.th"),
+        ]
+        for name, email in contacts:
             row = tk.Frame(content, bg=CARD_COLOR)
             row.pack(fill="x", pady=2)
-            if role:
-                tk.Label(row, text=role, font=thai_font(self.fs(22), "bold"),
-                         bg=CARD_COLOR, fg=TEXT_COLOR,
-                         width=16, anchor="w").pack(side="left")
-            if name:
-                tk.Label(row, text=name, font=thai_font(self.fs(20)),
-                         bg=CARD_COLOR, fg="#555555", anchor="w").pack(side="left")
+            tk.Label(row, text=f"  {name}", font=thai_font(self.fs(20)),
+                     bg=CARD_COLOR, fg="#555555", anchor="w").pack(side="left")
+            tk.Label(row, text=email, font=thai_font(self.fs(20)),
+                     bg=CARD_COLOR, fg="#0055cc", anchor="w").pack(side="left", padx=(8, 0))
 
-        # close
-        btn_bar = tk.Frame(dlg, bg=CARD_COLOR)
-        btn_bar.pack(fill="x", padx=24, pady=(0, 16))
-        self.primary_btn(btn_bar, "ปิด", dlg.destroy,
-                         fontsize=self.fs(22), width=10).pack(side="right")

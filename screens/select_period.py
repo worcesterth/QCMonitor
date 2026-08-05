@@ -16,7 +16,7 @@ class SelectPeriodScreen(BaseScreen):
         self.body.pack(fill="both", expand=True)
 
         bottom = tk.Frame(card, bg=CARD_COLOR)
-        bottom.pack(side="bottom", fill="x", padx=16, pady=12)
+        bottom.pack(side="bottom", fill="x", padx=16, pady=16)
         self.back_btn(bottom, "ย้อนกลับ", lambda: self.app.show("select_type"), fontsize=self.fs(26), width=12).pack(side="right", padx=4)
 
     def on_show(self, **_):

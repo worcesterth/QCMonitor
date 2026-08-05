@@ -16,6 +16,30 @@ PATTERN_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)),
 FRAME_DELAY_MS = 80   # ความเร็วเล่น frame (ms)
 
 
+_CH_PLACEHOLDER = "เช่น 2-23, 34, 40-42, 55"
+
+
+def _parse_ch_tokens(raw: str) -> list:
+    """แปลง input เป็น token list รองรับตัวเลขเดี่ยว (34) และช่วง (2-23)"""
+    tokens = []
+    seen = set()
+    for part in re.split(r'[,\s]+', raw.strip()):
+        if not part:
+            continue
+        if re.match(r'^\d+$', part):
+            v = int(part)
+            if 0 <= v <= 255 and part not in seen:
+                seen.add(part)
+                tokens.append(part)
+        elif re.match(r'^\d+-\d+$', part):
+            lo, hi = part.split('-', 1)
+            lo, hi = int(lo), int(hi)
+            if 0 <= lo <= hi <= 255 and part not in seen:
+                seen.add(part)
+                tokens.append(part)
+    return tokens
+
+
 class TestRunnerScreen(BaseScreen):
     def __init__(self, parent, app):
         super().__init__(parent, app)
@@ -253,7 +277,7 @@ class TestRunnerScreen(BaseScreen):
 
     def _show_uniformity_intro(self, on_next, on_prev):
         dlg = tk.Toplevel(self.app)
-        dlg.title("สำหรับการประเมินในหัวข้อถัดไป")
+        # dlg.title("สำหรับการประเมินในหัวข้อถัดไป")
         dlg.resizable(False, False)
         dlg.configure(bg=CARD_COLOR)
         dlg.transient(self.app)
@@ -268,16 +292,22 @@ class TestRunnerScreen(BaseScreen):
         dlg.focus_force()
 
         tk.Label(dlg,
-                 text="การประเมินด้านความสม่ำเสมอของค่า pixel (uniformity)",
-                 font=thai_font(self.fs(24), "bold"), bg=CARD_COLOR, fg=TEXT_COLOR,
+                 text="สำหรับการประเมินในหัวข้อถัดไป",
+                 font=thai_font(self.fs(36), "bold underline"), bg=CARD_COLOR, fg=TEXT_COLOR,
                  wraplength=int(660 * self._s), justify="left",
-                 ).pack(anchor="w", padx=24, pady=(24, 10))
+                 ).pack(anchor="w", padx=24, pady=(24, 4))
+
+        tk.Label(dlg,
+                 text="การประเมินด้านความสม่ำเสมอของความสว่างทั่วหน้าจอ (Luminance uniformity/noise)",
+                 font=thai_font(self.fs(24), "bold underline"), bg=CARD_COLOR, fg=TEXT_COLOR,
+                 wraplength=int(660 * self._s), justify="left",
+                 ).pack(anchor="w", padx=24, pady=(0, 10))
 
         body = (
             "สังเกตหาจุดที่ไม่สม่ำเสมอหรือจุดด่างในแต่ละระดับค่า pixel ที่แสดง "
             "ซึ่งภาพที่แสดงต่อไปนี้เป็นภาพที่มีระดับค่า pixel ตั้งแต่ 0-255 "
-            "โปรดมองอย่างละเอียดแล้วทำการเลื่อนเมาส์ดูภาพตั้งแต่ภาพที่แสดงค่า pixel ตั้งแต่ 0 "
-            "ถึงภาพที่แสดงค่า pixel เท่ากับ 255"
+            "โดยสามารถเลื่อนดูในแต่ละระดับความสว่างแบบอัตโนมัติ หรือทำการเลื่อนเมาส์ดูด้วยตนเอง"
+            #"ถึงภาพที่แสดงค่า pixel เท่ากับ 255"
         )
         tk.Label(dlg, text=body, font=thai_font(self.fs(24)), bg=CARD_COLOR, fg=TEXT_COLOR,
                  wraplength=int(660 * self._s), justify="left",
@@ -302,7 +332,7 @@ class TestRunnerScreen(BaseScreen):
         screen_type = session.get("screen_type", "diagnostic")
         period      = session.get("period", "monthly")
 
-        type_map   = {"diagnostic": "diagnostic", "modality": "modality", "clinic": "clinical"}
+        type_map   = {"diagnostic": "diagnostic", "modality": "modality", "clinic": "clinical", "ehr": "clinical"}
         period_map = {"monthly": "m", "quarterly": "3m", "annual": "y"}
 
         t = type_map.get(screen_type, screen_type)
@@ -406,17 +436,34 @@ class TestRunnerScreen(BaseScreen):
         if qtype == "yes_no_channels_text":
             self._has_channels = True
             self._has_text_ch  = True
-            saved_text = " ".join(str(c) for c in saved.get("failed_channels", []))
+            saved_text = ", ".join(str(c) for c in saved.get("failed_channels", []))
             self._text_ch_var.set(saved_text)
 
             tk.Label(self.channels_outer,
-                     text="ระบุค่าที่ไม่ผ่าน (0–255 คั่นด้วยช่องว่าง):",
+                     text="ระบุค่าที่ไม่ผ่าน (คั่นด้วย , หรือช่องว่าง หรือ ช่วงเช่น 2-23):",
                      font=thai_font(self.fs(22)), bg=CARD_COLOR, fg=TEXT_COLOR
                      ).grid(row=0, column=0, sticky="w", pady=(4, 2))
-            tk.Entry(self.channels_outer, textvariable=self._text_ch_var,
-                     font=thai_font(self.fs(22)), bg=ENTRY_BG, fg=TEXT_COLOR,
-                     relief="sunken", bd=2, width=30
-                     ).grid(row=1, column=0, sticky="w", padx=2, pady=(0, 4))
+            _ent = tk.Entry(self.channels_outer, textvariable=self._text_ch_var,
+                            font=thai_font(self.fs(22)), bg=ENTRY_BG, fg=TEXT_COLOR,
+                            relief="sunken", bd=2, width=30)
+            _ent.grid(row=1, column=0, sticky="w", padx=2, pady=(0, 4))
+
+            if not saved_text:
+                self._text_ch_var.set(_CH_PLACEHOLDER)
+                _ent.configure(fg="#aaaaaa")
+
+            def _ph_in(_, ent=_ent):
+                if self._text_ch_var.get() == _CH_PLACEHOLDER:
+                    self._text_ch_var.set("")
+                    ent.configure(fg=TEXT_COLOR)
+
+            def _ph_out(_, ent=_ent):
+                if not self._text_ch_var.get().strip():
+                    self._text_ch_var.set(_CH_PLACEHOLDER)
+                    ent.configure(fg="#aaaaaa")
+
+            _ent.bind("<FocusIn>",  _ph_in)
+            _ent.bind("<FocusOut>", _ph_out)
             self._show_channels(saved.get("result") == "fail")
             return
 
@@ -482,16 +529,8 @@ class TestRunnerScreen(BaseScreen):
             return
 
         if self._has_text_ch:
-            seen = set()
-            failed_ch = []
-            for part in self._text_ch_var.get().split():
-                try:
-                    v = int(part)
-                    if 0 <= v <= 255 and v not in seen:
-                        seen.add(v)
-                        failed_ch.append(v)
-                except ValueError:
-                    pass
+            raw = self._text_ch_var.get()
+            failed_ch = _parse_ch_tokens("" if raw == _CH_PLACEHOLDER else raw)
         else:
             failed_ch = [i + 1 for i, v in enumerate(self.ch_vars) if v.get()]
         session["answers"][item["item_id"]] = {
@@ -512,10 +551,10 @@ class TestRunnerScreen(BaseScreen):
             return
         if self._has_channels and self._answer_var.get() == "fail":
             if self._has_text_ch:
-                parts = [p for p in self._text_ch_var.get().split()
-                         if p.isdigit() and 0 <= int(p) <= 255]
+                raw = self._text_ch_var.get()
+                parts = _parse_ch_tokens("" if raw == _CH_PLACEHOLDER else raw)
                 if not parts:
-                    self._warn_lbl.configure(text="*กรุณาระบุค่าที่ไม่ผ่านอย่างน้อย 1 ค่า (0–255)")
+                    self._warn_lbl.configure(text="*กรุณาระบุค่าที่ไม่ผ่านอย่างน้อย 1 ค่า (เช่น 34 หรือ 2-23)")
                     self._warn_lbl.pack(anchor="w", pady=(0, 4))
                     self._fit_card_win()
                     return

@@ -92,7 +92,7 @@ class CriteriaScreen(BaseScreen):
         # col 0 = left (weight 1), col 1 = separator, col 2 = right (weight 2)
         self._body.columnconfigure(0, weight=1)
         self._body.columnconfigure(1, weight=0, minsize=1)
-        self._body.columnconfigure(2, weight=2)
+        self._body.columnconfigure(2, weight=1)
 
         r = [0]
 
@@ -106,7 +106,7 @@ class CriteriaScreen(BaseScreen):
                            padx=_PAD_X, pady=_PAD_Y)
             w.grid(row=r[0], column=col, columnspan=colspan, sticky="nsew")
             if isinstance(w, tk.Label):
-                w.configure(wraplength=200)
+                w.configure(wraplength=1)
                 w.bind("<Configure>",
                        lambda e, l=w: l.configure(
                            wraplength=max(60, e.width - _PAD_X * 2)))
@@ -138,10 +138,31 @@ class CriteriaScreen(BaseScreen):
                 _hsep()
                 for item in group["items"]:
                     criterion = item.get("pass_criterion", "")
-                    left_text = item["title"]
                     if criterion:
-                        left_text += f"\nเกณฑ์: {criterion}"
-                    _cell(left_text, 0, _ITEM_BG, thai_font(26))
+                        # ใช้ frame ห่อ 2 label แยก เพื่อไม่ให้ tk.Text ทำ layout พัง
+                        frame = tk.Frame(self._body, bg=_ITEM_BG)
+                        frame.grid(row=r[0], column=0, sticky="nsew")
+                        lbl_title = tk.Label(frame, text=item["title"],
+                                             font=thai_font(26), fg=TEXT_COLOR,
+                                             bg=_ITEM_BG, anchor="nw",
+                                             justify="left", wraplength=1,
+                                             padx=_PAD_X, pady=_PAD_Y)
+                        lbl_title.pack(fill="x", anchor="w")
+                        lbl_crit = rich_label(frame,
+                                              text=f"<u>เกณฑ์:</u> {criterion}",
+                                              font=thai_font(26), fg=TEXT_COLOR,
+                                              bg=_ITEM_BG, padx=_PAD_X, pady=0)
+                        lbl_crit.pack(fill="x", anchor="w")
+                        def _bind(f, lt, lc):
+                            def _resize(e):
+                                w = max(60, e.width - _PAD_X * 2)
+                                lt.configure(wraplength=w)
+                                if isinstance(lc, tk.Label):
+                                    lc.configure(wraplength=w)
+                            f.bind("<Configure>", _resize)
+                        _bind(frame, lbl_title, lbl_crit)
+                    else:
+                        _cell(item["title"], 0, _ITEM_BG, thai_font(26))
                     tk.Frame(self._body, bg=BORDER_CLR, width=1).grid(
                         row=r[0], column=1, sticky="ns")
                     _cell(item.get("fix_guide", ""), 2, _ITEM_BG, thai_font(26))

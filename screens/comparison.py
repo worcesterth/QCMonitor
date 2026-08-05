@@ -37,7 +37,8 @@ ALT_ROW      = "#f5f5f5"   # สีแถวสลับ (ขาวอมเท�
 
 _HEADS   = ["หัวข้อประเมิน", "Baseline", "ครั้งนี้",
             "ผลการเปรียบเทียบ", "คำอธิบายเพิ่มเติมจากการเปรียบเทียบ"]
-_WIDTHS_REF = [290, 140, 140, 320]   # reference widths at 1920×1080
+_WEIGHTS      = [3, 1, 1, 2, 3]   # ratio 3:1:1:2:3 (all columns weight-based)
+_WEIGHT_TOTAL = 10
 _ANCHORS = ["w", "center", "center", "w", "w"]
 
 _TAG_COLOR = {
@@ -53,7 +54,6 @@ class ComparisonScreen(BaseScreen):
 
     def __init__(self, parent, app):
         super().__init__(parent, app)
-        self._widths = [int(w * self._s) for w in _WIDTHS_REF]
 
         self.card_header(self, "เปรียบเทียบกับครั้งก่อนหน้า", bg=HEADER_BG, fg=HDR_TEXT, size=self.fs(26))
 
@@ -73,11 +73,31 @@ class ComparisonScreen(BaseScreen):
         tbl = tk.Frame(self, bg=BG_COLOR)
         tbl.pack(fill="both", expand=True, padx=24, pady=(4, 12))
 
-        # column header row (fixed, outside canvas)
+        # column header row (outside canvas — synced via _on_canvas_resize)
         head_bar = tk.Frame(tbl, bg=BG_COLOR)
         head_bar.pack(fill="x")
-        self._build_row(head_bar, _HEADS, "#ffffff", TEXT_COLOR,
-                        thai_font(self.fs(26), "bold"), pady=10)
+        self._head_row = tk.Frame(head_bar, bg="#ffffff")
+        self._head_row.pack(fill="x")
+        for i, wt in enumerate(_WEIGHTS):
+            self._head_row.columnconfigure(i, weight=wt)
+        self._head_labels = []
+        for i, (text, anchor) in enumerate(zip(_HEADS, _ANCHORS)):
+            lbl = tk.Label(self._head_row, text=text,
+                           font=thai_font(self.fs(26), "bold"),
+                           fg=TEXT_COLOR, bg="#ffffff",
+                           anchor=anchor, padx=10, pady=10,
+                           wraplength=200, justify="left")
+            lbl.grid(row=0, column=i, sticky="nsew")
+            self._head_labels.append(lbl)
+
+        def _on_head_resize(e, lbls=self._head_labels):
+            if e.width < 100:
+                return
+            for i, lbl in enumerate(lbls):
+                col_w = e.width * _WEIGHTS[i] // _WEIGHT_TOTAL
+                lbl.configure(wraplength=max(40, col_w - 20))
+        self._head_row.bind("<Configure>", _on_head_resize)
+
         tk.Frame(tbl, bg=BORDER_CLR, height=2).pack(fill="x")
 
         # scrollable body
@@ -103,7 +123,6 @@ class ComparisonScreen(BaseScreen):
                           lambda e: self._canvas.yview_scroll(
                               -1 if e.delta > 0 else 1, "units"))
 
-        self._desc_labels: list[tk.Label] = []
         self._rows_data: list[dict] = []
 
         # ── bottom ────────────────────────────────────────────────────────
@@ -119,39 +138,81 @@ class ComparisonScreen(BaseScreen):
     # ── table helpers ─────────────────────────────────────────────────────
 
     def _build_row(self, parent, values, bg, fg, font, pady=6):
-        """สร้างแถวหนึ่งแถว คืน Label คอลัมน์สุดท้าย (คำอธิบาย)"""
+        """col สุดท้ายใช้ Text(wrap=word) เพื่อไม่ตัดกลางคำไทย"""
         row = tk.Frame(parent, bg=bg)
         row.pack(fill="x")
-        for i, w in enumerate(self._widths):
-            row.columnconfigure(i, minsize=w, weight=0)
-        row.columnconfigure(len(self._widths), weight=1)
-        desc_lbl = None
+        for i, wt in enumerate(_WEIGHTS):
+            row.columnconfigure(i, weight=wt)
+
+        labels = []
         for i, (text, anchor) in enumerate(zip(values, _ANCHORS)):
-            w = self._widths[i] if i < len(self._widths) else 0
-            lbl = tk.Label(row, text=text, font=font, fg=fg, bg=bg,
-                           anchor=anchor, padx=10, pady=pady,
-                           wraplength=max(0, w - 12) if w else 0,
-                           justify="left")
-            lbl.grid(row=0, column=i, sticky="nsew")
-            if i == len(self._widths):
-                desc_lbl = lbl
-        return desc_lbl
+            if anchor == "w":  # left-aligned cols → Text(wrap=word) ไม่ตัดกลางคำไทย
+                cell = tk.Frame(row, bg=bg)
+                cell.grid(row=0, column=i, sticky="nsew")
+                txt = tk.Text(cell, font=font, fg=fg, bg=bg,
+                              wrap="word", padx=10, pady=pady,
+                              relief="flat", borderwidth=0,
+                              highlightthickness=0, cursor="arrow",
+                              width=1, height=1, state="normal")
+                txt.tag_configure("c", foreground=fg)
+                txt.insert("1.0", text, "c")
+                txt.configure(state="disabled")
+                txt.pack(fill="x")
+                txt.bind("<MouseWheel>",
+                         lambda e: self._canvas.yview_scroll(
+                             -1 if e.delta > 0 else 1, "units"))
+                _lh = [0]
+                def _refit(_, w=txt, lh=_lh):
+                    w.update_idletasks()
+                    try:
+                        h = max(1, w.count("1.0", "end", "displaylines")[0])
+                    except Exception:
+                        h = 1
+                    if h != lh[0]:
+                        lh[0] = h
+                        w.configure(height=h)
+                cell.bind("<Configure>", _refit)
+                labels.append(txt)
+            else:  # centered cols (Baseline, ครั้งนี้) → Label ชิดบน
+                lbl = tk.Label(row, text=text, font=font, fg=fg, bg=bg,
+                               anchor="n", padx=10, pady=pady,
+                               wraplength=200, justify="center")
+                lbl.grid(row=0, column=i, sticky="nsew")
+                labels.append(lbl)
+
+        def _on_resize(e, r=row, lbls=labels):
+            if e.width < 100:
+                return
+            total = e.width
+            for i, wt in enumerate(_WEIGHTS):
+                col_w = total * wt // _WEIGHT_TOTAL
+                wgt = 1 if i == len(_WEIGHTS) - 1 else 0
+                r.columnconfigure(i, minsize=col_w, weight=wgt)
+            for i, lbl in enumerate(lbls):
+                if isinstance(lbl, tk.Label):
+                    col_w = total * _WEIGHTS[i] // _WEIGHT_TOTAL
+                    lbl.configure(wraplength=max(20, col_w - 20))
+        row.bind("<Configure>", _on_resize)
+
+        return labels[-1]
 
     def _on_canvas_resize(self, e):
-        self._canvas.itemconfig(self._win, width=e.width)
-        self._refresh_desc_wrap(e.width)
-
-    def _refresh_desc_wrap(self, canvas_w=None):
-        if canvas_w is None:
-            canvas_w = self._canvas.winfo_width()
-        desc_w = max(80, canvas_w - sum(self._widths) - 12)
-        for lbl in self._desc_labels:
-            lbl.configure(wraplength=desc_w)
+        canvas_w = e.width
+        self._canvas.itemconfig(self._win, width=canvas_w)
+        if canvas_w < 100:
+            return
+        # sync header column widths to exactly match canvas body columns
+        for i, wt in enumerate(_WEIGHTS):
+            col_w = canvas_w * wt // _WEIGHT_TOTAL
+            w = 1 if i == len(_WEIGHTS) - 1 else 0
+            self._head_row.columnconfigure(i, minsize=col_w, weight=w)
+        for i, lbl in enumerate(self._head_labels):
+            col_w = canvas_w * _WEIGHTS[i] // _WEIGHT_TOTAL
+            lbl.configure(wraplength=max(40, col_w - 20))
 
     def _clear(self):
         for w in self._body.winfo_children():
             w.destroy()
-        self._desc_labels.clear()
         self._rows_data.clear()
         self._canvas.yview_moveto(0)
 
@@ -200,10 +261,16 @@ class ComparisonScreen(BaseScreen):
         row_idx = 0
 
         for group in groups:
-            self._build_row(self._body,
-                            [group["group_title"], "", "", "", ""],
-                            "#BFBFBF", TEXT_COLOR,
-                            thai_font(26, "bold"), pady=10)
+            # group header spans full width
+            g_row = tk.Frame(self._body, bg="#BFBFBF")
+            g_row.pack(fill="x")
+            g_lbl = tk.Label(g_row, text=group["group_title"],
+                             font=thai_font(26, "bold"), fg=TEXT_COLOR,
+                             bg="#BFBFBF", anchor="w", padx=10, pady=10,
+                             wraplength=1, justify="left")
+            g_lbl.pack(fill="x")
+            g_row.bind("<Configure>",
+                       lambda e, l=g_lbl: l.configure(wraplength=max(20, e.width - 20)))
             self._rows_data.append({"is_group": True, "title": group["group_title"]})
 
             for item in group["items"]:
@@ -219,17 +286,15 @@ class ComparisonScreen(BaseScreen):
                 row_bg = CARD_COLOR if row_idx % 2 == 0 else ALT_ROW
                 row_idx += 1
 
-                desc_lbl = self._build_row(
+                display_title = item.get("criteria_title", item["title"])
+                self._build_row(
                     self._body,
-                    [f"  {item['title']}", b_text, c_text, result_text, description],
+                    [f"  {display_title}", b_text, c_text, result_text, description],
                     row_bg, fg, thai_font(26), pady=10,
                 )
-                if desc_lbl:
-                    self._desc_labels.append(desc_lbl)
-
                 self._rows_data.append({
                     "is_group":    False,
-                    "title":       f"  {item['title']}",
+                    "title":       f"  {display_title}",
                     "b_text":      b_text,
                     "c_text":      c_text,
                     "result_text": result_text,
@@ -240,7 +305,6 @@ class ComparisonScreen(BaseScreen):
         self.update_idletasks()
         self._canvas.configure(scrollregion=self._canvas.bbox("all"))
         self._canvas.yview_moveto(0)
-        self.after(10, self._refresh_desc_wrap)
 
     # ── helpers ───────────────────────────────────────────────────────────
 
