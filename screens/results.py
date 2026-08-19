@@ -157,7 +157,8 @@ class ResultsScreen(BaseScreen):
                         notes = (f"จำนวนภาพที่ Pixel ไม่สม่ำเสมอ: {len(fc)} ภาพ\n"
                                  f"ค่า Pixel ของภาพที่ไม่เห็น: {ch_str}") + (f"  {notes}" if notes else "")
                     else:
-                        notes = f"ค่า Pixel ของช่องที่ไม่เห็น: {ch_str}" + (f"  {notes}" if notes else "")
+                        ch_lbl = item.get("channel_label", "ช่อง")
+                        notes = f"ค่า Pixel ของ{ch_lbl}ที่ไม่เห็น: {ch_str}" + (f"  {notes}" if notes else "")
                 if not ans["passed"]:
                     overall_pass = False
             else:
