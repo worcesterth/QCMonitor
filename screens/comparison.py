@@ -278,8 +278,8 @@ class ComparisonScreen(BaseScreen):
                 b_ans = base_answers.get(iid)
                 c_ans = cur_answers.get(iid)
 
-                b_text = _ans_text(b_ans)
-                c_text = _ans_text(c_ans)
+                b_text = _ans_text(b_ans, item)
+                c_text = _ans_text(c_ans, item)
                 result_text, tag, description = _compare_result(item, b_ans, c_ans)
 
                 fg     = _TAG_COLOR.get(tag, TEXT_COLOR)
@@ -381,14 +381,18 @@ class ComparisonScreen(BaseScreen):
 
 # ── helper functions ──────────────────────────────────────────────────────────
 
-def _ans_text(ans) -> str:
+def _ans_text(ans, item: dict = None) -> str:
     if ans is None:
         return "ไม่มีข้อมูล"
     if ans["passed"]:
         return "ผ่าน"
     fc = ans.get("failed_channels", [])
     if fc:
-        return f"ไม่ผ่าน ({len(fc)} ช่อง)"
+        item = item or {}
+        if item.get("question_type") == "yes_no_channels_text":
+            return f"ไม่ผ่าน ({len(fc)} ภาพ)"
+        ch_lbl = item.get("channel_label", "ช่อง")
+        return f"ไม่ผ่าน ({len(fc)} {ch_lbl})"
     return "ไม่ผ่าน"
 
 
