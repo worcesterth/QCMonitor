@@ -114,7 +114,7 @@ class ResultsScreen(BaseScreen):
         items   = session.get("test_items", [])
         answers = session.get("answers", {})
 
-        type_map   = {"diagnostic": "Diagnostic", "modality": "Modality", "clinic": "Clinical Review"}
+        type_map   = {"diagnostic": "Diagnostic", "modality": "Modality", "clinic": "Clinical Review", "ehr": "Electronic Health Record display"}
         period_map = {"monthly": "ประจำเดือน", "quarterly": "ประจำ 3 เดือน", "annual": "ประจำปี"}
         stype  = type_map.get(session.get("screen_type", ""), "")
         period = period_map.get(session.get("period", ""), "")
@@ -158,8 +158,7 @@ class ResultsScreen(BaseScreen):
                                  f"ค่า Pixel ของภาพที่ไม่เห็น: {ch_str}") + (f"  {notes}" if notes else "")
                     else:
                         ch_lbl = item.get("channel_label", "ช่อง")
-                        note_prefix = item.get("channel_note", f"ค่า Pixel ของ{ch_lbl}ที่ไม่เห็น")
-                        notes = f"{note_prefix}: {ch_str}" + (f"  {notes}" if notes else "")
+                        notes = f"ค่า Pixel ของ{ch_lbl}ที่ไม่เห็น: {ch_str}" + (f"  {notes}" if notes else "")
                 if not ans["passed"]:
                     overall_pass = False
             else:
