@@ -158,7 +158,8 @@ class ResultsScreen(BaseScreen):
                                  f"ค่า Pixel ของภาพที่ไม่เห็น: {ch_str}") + (f"  {notes}" if notes else "")
                     else:
                         ch_lbl = item.get("channel_label", "ช่อง")
-                        notes = f"ค่า Pixel ของ{ch_lbl}ที่ไม่เห็น: {ch_str}" + (f"  {notes}" if notes else "")
+                        note_prefix = item.get("channel_note", f"ค่า Pixel ของ{ch_lbl}ที่ไม่เห็น")
+                        notes = f"{note_prefix}: {ch_str}" + (f"  {notes}" if notes else "")
                 if not ans["passed"]:
                     overall_pass = False
             else:
