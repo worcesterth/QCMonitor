@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 from screens.base import (
     BaseScreen, BG_COLOR, CARD_COLOR, TEXT_COLOR, BORDER_CLR,
-    PASS_GREEN, FAIL_RED, thai_font, HEADER_BG, HDR_TEXT,
+    PASS_GREEN, FAIL_RED, thai_font, HEADER_BG, HDR_TEXT, count_fc,
 )
 from config import TEST_CONFIG
 
@@ -390,9 +390,9 @@ def _ans_text(ans, item: dict = None) -> str:
     if fc:
         item = item or {}
         if item.get("question_type") == "yes_no_channels_text":
-            return f"ไม่ผ่าน ({len(fc)} ภาพ)"
+            return f"ไม่ผ่าน ({count_fc(fc)} ภาพ)"
         ch_lbl = item.get("channel_label", "ช่อง")
-        return f"ไม่ผ่าน ({len(fc)} {ch_lbl})"
+        return f"ไม่ผ่าน ({count_fc(fc)} {ch_lbl})"
     return "ไม่ผ่าน"
 
 
