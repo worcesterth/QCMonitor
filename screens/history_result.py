@@ -7,7 +7,7 @@ import tkinter as tk
 from tkinter import ttk
 from screens.base import (
     BaseScreen, BG_COLOR, CARD_COLOR, TEXT_COLOR, BORDER_CLR,
-    PASS_GREEN, FAIL_RED, thai_font,
+    PASS_GREEN, FAIL_RED, thai_font, count_fc,
 )
 from config import TEST_CONFIG
 
@@ -182,8 +182,8 @@ class HistoryResultScreen(BaseScreen):
                         fc = ans["failed_channels"]
                         ch_str = ", ".join(str(c) for c in fc)
                         if item.get("question_type") == "yes_no_channels_text":
-                            notes = (f"จำนวนภาพที่ Pixel ไม่สม่ำเสมอ: {len(fc)} ช่อง\n"
-                                     f"ค่า Pixel ของช่องที่ไม่เห็น: {ch_str}") + (f"  {notes}" if notes else "")
+                            notes = (f"จำนวนภาพที่ Pixel ไม่สม่ำเสมอ: {count_fc(fc)} ภาพ\n"
+                                     f"ค่า Pixel ของภาพที่ไม่เห็น: {ch_str}") + (f"  {notes}" if notes else "")
                         else:
                             ch_lbl = item.get("channel_label", "ช่อง")
                             notes = f"ค่า Pixel ของ{ch_lbl}ที่ไม่เห็น: {ch_str}" + (f"  {notes}" if notes else "")
