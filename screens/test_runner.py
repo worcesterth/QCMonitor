@@ -20,23 +20,25 @@ _CH_PLACEHOLDER = "เช่น 2-23, 34, 40-42, 55"
 
 
 def _parse_ch_tokens(raw: str) -> list:
-    """แปลง input เป็น token list รองรับตัวเลขเดี่ยว (34) และช่วง (2-23)"""
+    """แปลง input เป็น token list รองรับตัวเลขเดี่ยว (34) และช่วง (2-23) ไม่นับซ้ำ"""
     tokens = []
-    seen = set()
+    seen_nums: set[int] = set()
     for part in re.split(r'[,\s]+', raw.strip()):
         if not part:
             continue
         if re.match(r'^\d+$', part):
             v = int(part)
-            if 0 <= v <= 255 and part not in seen:
-                seen.add(part)
+            if 0 <= v <= 255 and v not in seen_nums:
+                seen_nums.add(v)
                 tokens.append(part)
         elif re.match(r'^\d+-\d+$', part):
             lo, hi = part.split('-', 1)
             lo, hi = int(lo), int(hi)
-            if 0 <= lo <= hi <= 255 and part not in seen:
-                seen.add(part)
-                tokens.append(part)
+            if 0 <= lo <= hi <= 255:
+                nums = set(range(lo, hi + 1))
+                if not nums.issubset(seen_nums):
+                    seen_nums.update(nums)
+                    tokens.append(part)
     return tokens
 
 
@@ -305,8 +307,8 @@ class TestRunnerScreen(BaseScreen):
 
         body = (
             "สังเกตหาจุดที่ไม่สม่ำเสมอหรือจุดด่างในแต่ละระดับค่า pixel ที่แสดง "
-            "ซึ่งภาพที่แสดงต่อไปนี้เป็นภาพที่มีระดับค่า pixel ตั้งแต่ 0-255 "
-            "โดยสามารถเลื่อนดูในแต่ละระดับความสว่างแบบอัตโนมัติ หรือทำการเลื่อนเมาส์ดูด้วยตนเอง"
+            "ซึ่งภาพที่แสดงต่อไปนี้\nเป็นภาพที่มีระดับค่า pixel ตั้งแต่ 0-255 "
+            "โดยสามารถเลื่อนดูในแต่ละระดับความสว่างแบบอัตโนมัติ \nหรือทำการเลื่อนเมาส์ดูด้วยตนเอง"
             #"ถึงภาพที่แสดงค่า pixel เท่ากับ 255"
         )
         tk.Label(dlg, text=body, font=thai_font(self.fs(24)), bg=CARD_COLOR, fg=TEXT_COLOR,
