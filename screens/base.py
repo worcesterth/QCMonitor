@@ -40,8 +40,7 @@ def thai_font(size: int = 14, weight: str = "normal") -> tuple:
     except Exception:
         family = "TkDefaultFont"
 
-    bold = "bold" if weight == "bold" else "normal"
-    return (family, size, bold)
+    return (family, size, weight)
 
 
 def strip_markup(text: str) -> str:
