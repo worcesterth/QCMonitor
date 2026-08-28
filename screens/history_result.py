@@ -139,7 +139,7 @@ class HistoryResultScreen(BaseScreen):
 
         import datetime
         import database as _db
-        type_map   = {"diagnostic": "Diagnostic", "modality": "Modality", "clinic": "Clinical Review", "ehr": "Electronic Health Record display"}
+        type_map   = {"diagnostic": "Diagnostic", "modality": "Modality", "clinic": "Clinical Review", "ehr": "Electronic Health Record"}
         period_map = {"monthly": "รายเดือน", "quarterly": "ราย 3 เดือน", "annual": "ประจำปี"}
         stype  = type_map.get(ev.get("screen_type", ""), "")
         period = period_map.get(ev.get("period", ""), "")

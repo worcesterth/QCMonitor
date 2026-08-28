@@ -114,7 +114,7 @@ class ResultsScreen(BaseScreen):
         items   = session.get("test_items", [])
         answers = session.get("answers", {})
 
-        type_map   = {"diagnostic": "Diagnostic", "modality": "Modality", "clinic": "Clinical Review", "ehr": "Electronic Health Record display"}
+        type_map   = {"diagnostic": "Diagnostic", "modality": "Modality", "clinic": "Clinical Review", "ehr": "Electronic Health Record"}
         period_map = {"monthly": "ประจำเดือน", "quarterly": "ประจำ 3 เดือน", "annual": "ประจำปี"}
         stype  = type_map.get(session.get("screen_type", ""), "")
         period = period_map.get(session.get("period", ""), "")
