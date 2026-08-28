@@ -430,8 +430,8 @@ def _compare_result(item: dict, b_ans, c_ans) -> tuple[str, str, str]:
         return "คุณภาพของหน้าจอเท่าเดิม", "same", desc
 
     # yes_no_channels / yes_no_channels_text — เปรียบเทียบจำนวนช่องที่ไม่ผ่าน
-    b_fc = len(b_ans.get("failed_channels", []))
-    c_fc = len(c_ans.get("failed_channels", []))
+    b_fc = count_fc(b_ans.get("failed_channels", []))
+    c_fc = count_fc(c_ans.get("failed_channels", []))
     base_desc = "ผลที่ได้จากการทดสอบ ครั้งนี้ และผลที่ได้จาก baseline ไม่ผ่านเกณฑ์"
 
     if qtype == "yes_no_channels_text":
