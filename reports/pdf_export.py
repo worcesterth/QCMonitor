@@ -143,7 +143,12 @@ def export_history_result(ev: dict, groups: list, filepath: str, copies: int = 1
                 notes = ans.get("notes", "")
                 if ans.get("failed_channels"):
                     ch_str = ", ".join(str(c) for c in ans["failed_channels"])
-                    notes  = f"ช่องที่ไม่เห็น: {ch_str}" + (f"  {notes}" if notes else "")
+                    if item.get("question_type") == "yes_no_channels_text":
+                        note_prefix = "ภาพที่ไม่เห็น"
+                    else:
+                        ch_lbl = item.get("channel_label", "ช่อง")
+                        note_prefix = item.get("channel_note", f"{ch_lbl}ที่ไม่เห็น")
+                    notes  = f"{note_prefix}: {ch_str}" + (f"  {notes}" if notes else "")
             else:
                 res, rfg, notes = "ไม่ได้ตอบ", CLR_NONE, ""
 
