@@ -308,7 +308,7 @@ class TestRunnerScreen(BaseScreen):
         body = (
             "สังเกตหาจุดที่ไม่สม่ำเสมอหรือจุดด่างในแต่ละระดับค่า pixel ที่แสดง "
             "ซึ่งภาพที่แสดงต่อไปนี้\nเป็นภาพที่มีระดับค่า pixel ตั้งแต่ 0-255 "
-            "โดยสามารถเลื่อนดูในแต่ละระดับความสว่างแบบอัตโนมัติ \nหรือทำการเลื่อนเมาส์ดูด้วยตนเอง"
+            "โดยสามารถเลื่อนดูในแต่ละระดับความสว่างแบบอัตโนมัติ หรือทำการเลื่อนเมาส์ดูด้วยตนเอง"
             #"ถึงภาพที่แสดงค่า pixel เท่ากับ 255"
         )
         tk.Label(dlg, text=body, font=thai_font(self.fs(24)), bg=CARD_COLOR, fg=TEXT_COLOR,
@@ -341,10 +341,11 @@ class TestRunnerScreen(BaseScreen):
         p = period_map.get(period, period)
         n = item.get("image_index", 1)
 
-        for ext in ("png", "TIFF", "tiff", "jpg", "jpeg"):
-            fname = f"{t}_{p}_{n}.{ext}"
-            if os.path.exists(os.path.join(PATTERN_DIR, fname)):
-                return fname
+        for p_try in [p, "y", "m", "3m"]:
+            for ext in ("png", "TIFF", "tiff", "jpg", "jpeg"):
+                fname = f"{t}_{p_try}_{n}.{ext}"
+                if os.path.exists(os.path.join(PATTERN_DIR, fname)):
+                    return fname
         return item.get("image", "tg270_luminance.png")
 
     def _load_image(self, filename: str):
