@@ -141,22 +141,25 @@ def export_history_result(ev: dict, groups: list, filepath: str, copies: int = 1
             if ans:
                 res   = "ผ่าน " if ans["passed"] else "ไม่ผ่าน"
                 rfg   = CLR_PASS if ans["passed"] else CLR_FAIL
-                notes = ans.get("notes", "")
+                user_note = ans.get("notes", "")
+                notes = ""
                 if ans.get("failed_channels"):
                     fc_list = ans["failed_channels"]
                     ch_str = ", ".join(str(c) for c in fc_list)
                     if item.get("question_type") == "yes_no_channels_text":
                         notes = (f"จำนวนภาพที่ Pixel ไม่สม่ำเสมอ: {count_fc(fc_list)} ภาพ  "
-                                 f"ภาพที่ไม่เห็น: {ch_str}") + (f"  {notes}" if notes else "")
+                                 f"ภาพที่ไม่เห็น: {ch_str}")
                     else:
                         ch_lbl = item.get("channel_label", "ช่อง")
                         note_prefix = item.get("channel_note", f"{ch_lbl}ที่ไม่เห็น")
                         count_lbl = item.get("count_label")
                         if count_lbl:
                             notes = (f"{count_lbl}: {count_fc(fc_list)}  "
-                                     f"{note_prefix}: {ch_str}") + (f"  {notes}" if notes else "")
+                                     f"{note_prefix}: {ch_str}")
                         else:
-                            notes = f"{note_prefix}: {ch_str}" + (f"  {notes}" if notes else "")
+                            notes = f"{note_prefix}: {ch_str}"
+                if user_note:
+                    notes = (notes + "  " if notes else "") + f"*{user_note}"
             else:
                 res, rfg, notes = "ไม่ได้ตอบ", CLR_NONE, ""
 

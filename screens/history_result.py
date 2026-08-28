@@ -177,22 +177,25 @@ class HistoryResultScreen(BaseScreen):
                 if ans:
                     result_text = "ผ่าน" if ans["passed"] else "ไม่ผ่าน"
                     fg = PASS_GREEN if ans["passed"] else FAIL_RED
-                    notes = ans.get("notes", "")
+                    user_note = ans.get("notes", "")
+                    notes = ""
                     if ans.get("failed_channels"):
                         fc = ans["failed_channels"]
                         ch_str = ", ".join(str(c) for c in fc)
                         if item.get("question_type") == "yes_no_channels_text":
                             notes = (f"จำนวนภาพที่ Pixel ไม่สม่ำเสมอ: {count_fc(fc)} ภาพ\n"
-                                     f"ภาพที่ไม่เห็น: {ch_str}") + (f"  {notes}" if notes else "")
+                                     f"ภาพที่ไม่เห็น: {ch_str}")
                         else:
                             ch_lbl = item.get("channel_label", "ช่อง")
                             note_prefix = item.get("channel_note", f"{ch_lbl}ที่ไม่เห็น")
                             count_lbl = item.get("count_label")
                             if count_lbl:
                                 notes = (f"{count_lbl}: {count_fc(fc)}\n"
-                                         f"{note_prefix}: {ch_str}") + (f"  {notes}" if notes else "")
+                                         f"{note_prefix}: {ch_str}")
                             else:
-                                notes = f"{note_prefix}: {ch_str}" + (f"  {notes}" if notes else "")
+                                notes = f"{note_prefix}: {ch_str}"
+                    if user_note:
+                        notes = (notes + "\n" if notes else "") + f"*{user_note}"
                 else:
                     result_text = "ไม่ได้ตอบ"
                     fg = "#888888"
