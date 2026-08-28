@@ -2,6 +2,7 @@
 import os
 import sys
 import unicodedata
+from screens.base import count_fc
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import mm
 from reportlab.lib import colors
@@ -142,13 +143,20 @@ def export_history_result(ev: dict, groups: list, filepath: str, copies: int = 1
                 rfg   = CLR_PASS if ans["passed"] else CLR_FAIL
                 notes = ans.get("notes", "")
                 if ans.get("failed_channels"):
-                    ch_str = ", ".join(str(c) for c in ans["failed_channels"])
+                    fc_list = ans["failed_channels"]
+                    ch_str = ", ".join(str(c) for c in fc_list)
                     if item.get("question_type") == "yes_no_channels_text":
-                        note_prefix = "ภาพที่ไม่เห็น"
+                        notes = (f"จำนวนภาพที่ Pixel ไม่สม่ำเสมอ: {count_fc(fc_list)} ภาพ  "
+                                 f"ภาพที่ไม่เห็น: {ch_str}") + (f"  {notes}" if notes else "")
                     else:
                         ch_lbl = item.get("channel_label", "ช่อง")
                         note_prefix = item.get("channel_note", f"{ch_lbl}ที่ไม่เห็น")
-                    notes  = f"{note_prefix}: {ch_str}" + (f"  {notes}" if notes else "")
+                        count_lbl = item.get("count_label")
+                        if count_lbl:
+                            notes = (f"{count_lbl}: {count_fc(fc_list)}  "
+                                     f"{note_prefix}: {ch_str}") + (f"  {notes}" if notes else "")
+                        else:
+                            notes = f"{note_prefix}: {ch_str}" + (f"  {notes}" if notes else "")
             else:
                 res, rfg, notes = "ไม่ได้ตอบ", CLR_NONE, ""
 

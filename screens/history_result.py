@@ -187,7 +187,12 @@ class HistoryResultScreen(BaseScreen):
                         else:
                             ch_lbl = item.get("channel_label", "ช่อง")
                             note_prefix = item.get("channel_note", f"{ch_lbl}ที่ไม่เห็น")
-                            notes = f"{note_prefix}: {ch_str}" + (f"  {notes}" if notes else "")
+                            count_lbl = item.get("count_label")
+                            if count_lbl:
+                                notes = (f"{count_lbl}: {count_fc(fc)}\n"
+                                         f"{note_prefix}: {ch_str}") + (f"  {notes}" if notes else "")
+                            else:
+                                notes = f"{note_prefix}: {ch_str}" + (f"  {notes}" if notes else "")
                 else:
                     result_text = "ไม่ได้ตอบ"
                     fg = "#888888"
