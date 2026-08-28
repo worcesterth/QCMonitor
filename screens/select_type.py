@@ -21,7 +21,7 @@ class SelectTypeScreen(BaseScreen):
             ("diagnostic", "หน้าจอชนิดใช้วินิจฉัยทางการแพทย์\n(Diagnostic display)"),
             ("modality",   "หน้าจอชนิดใช้แสดงทางการแพทย์\n(Modality display)"),
             ("clinic",     "หน้าจอตรวจทานทางการแพทย์\n(Clinical Review display)"),
-            ("ehr",        "หน้าจอสำหรับงานเวชระเบียน\n(Electronic Health Record display)"),
+            ("ehr",        "หน้าจอสำหรับงานเวชระเบียน\n(Electronic Health Record)"),
         ]
 
         for key, label in types:

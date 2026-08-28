@@ -83,7 +83,7 @@ _BASE_STYLE = [
 def export_history_result(ev: dict, groups: list, filepath: str, copies: int = 1, rank: int = 0) -> None:
     _register()
 
-    type_map   = {"diagnostic": "Diagnostic", "modality": "Modality", "clinic": "Clinical Review", "ehr": "Electronic Health Record display"}
+    type_map   = {"diagnostic": "Diagnostic", "modality": "Modality", "clinic": "Clinical Review", "ehr": "Electronic Health Record"}
     period_map = {"monthly": "รายเดือน", "quarterly": "ราย 3 เดือน", "annual": "ประจำปี"}
     stype  = type_map.get(ev.get("screen_type", ""), "")
     period = period_map.get(ev.get("period", ""), "")
@@ -226,7 +226,7 @@ def export_comparison(current: dict, baseline: dict, row_data: list, filepath: s
         topMargin=15*mm, bottomMargin=15*mm,
     )
 
-    _type_map   = {"diagnostic": "Diagnostic", "modality": "Modality", "clinic": "Clinical Review", "ehr": "Electronic Health Record display"}
+    _type_map   = {"diagnostic": "Diagnostic", "modality": "Modality", "clinic": "Clinical Review", "ehr": "Electronic Health Record"}
     _period_map = {"monthly": "รายเดือน", "quarterly": "ราย 3 เดือน", "annual": "ประจำปี"}
     cmp_stype  = _type_map.get(current.get("screen_type", ""), current.get("screen_type", ""))
     cmp_period = _period_map.get(current.get("period", ""), current.get("period", ""))
