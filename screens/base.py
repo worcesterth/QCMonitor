@@ -311,16 +311,19 @@ class BaseScreen(tk.Frame):
 
 
 def count_fc(tokens) -> int:
-    """นับจำนวนภาพ/ช่องจริงจาก failed_channels tokens (รองรับช่วง เช่น '1-10' = 10)"""
-    total = 0
+    """นับจำนวนภาพ/ช่องจริงจาก failed_channels tokens ขยาย range และ deduplicate"""
+    nums = set()
     for t in tokens:
         s = str(t)
         if "-" in s:
             try:
                 lo, hi = s.split("-", 1)
-                total += int(hi) - int(lo) + 1
+                nums.update(range(int(lo), int(hi) + 1))
             except ValueError:
-                total += 1
+                nums.add(s)
         else:
-            total += 1
-    return total
+            try:
+                nums.add(int(s))
+            except ValueError:
+                nums.add(s)
+    return len(nums)
