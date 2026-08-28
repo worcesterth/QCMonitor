@@ -3,7 +3,7 @@ from screens.base import BaseScreen, CARD_COLOR, TEXT_COLOR, thai_font
 from config import TEST_CONFIG
 
 INSTRUCTION_LINES = [
-    "1. เปิดหน้าจอไว้ก่อน 30 นาที ก่อนเริ่มการทดสอบ",
+    "1. เปิดหน้าจอไว้ก่อน 30 นาที ก่อนเริ่มการทดสอบ เปิดหน้าต่างโปรแกรมให้เต็มจอก่อนเริ่มการทดสอบ เพื่อให้แสดงแบบประเมินได้ครบถ้วน",
     "2. ระยะห่างของการทดสอบตั้งแต่ระยะสายตาของผู้ทดสอบถึงหน้าจอ ควรมีระยะห่างประมาณหนึ่งช่วงแขน (ประมาณ 65 เซนติเมตร) เพื่อให้การทดสอบมีความแม่นยำมากขึ้น",
     "3. ก่อนการทำการประเมินตรวจสอบดูว่ามีรอยนิ้วมือและฝุ่นหรือไม่ เช็ดทำความสะอาดด้วยผ้าไร้ฝุ่น (lint-free cloth) หรือตามที่บริษัทแนะนำ",
     "4. เปิดไฟในห้องตามการใช้งานจริง",
@@ -24,14 +24,14 @@ class InstructionsScreen(BaseScreen):
         btn_frame.pack(side="bottom", fill="x", padx=16, pady=12)
 
         body = tk.Frame(card, bg=CARD_COLOR)
-        body.pack(fill="both", expand=True, padx=30, pady=28)
+        body.pack(fill="both", expand=True, padx=16, pady=12)
 
-        self.title_label(body, "คำแนะนำก่อนการประเมิน", size=self.fs(35)).pack(pady=(6, 24))
+        self.title_label(body, "คำแนะนำก่อนการประเมิน", size=self.fs(35)).pack(pady=(4, 12))
 
         for line in INSTRUCTION_LINES:
             tk.Label(body, text=line, font=thai_font(self.fs(28)), bg=CARD_COLOR,
                      fg=TEXT_COLOR, anchor="w", justify="left",
-                     wraplength=int(620 * self._s)).pack(anchor="w", pady=8)
+                     wraplength=int(760 * self._s)).pack(anchor="w", pady=5)
         self.primary_btn(btn_frame, "ถัดไป",    self._next,                  fontsize=self.fs(26), width=12).pack(side="right", padx=4)
         self.back_btn(btn_frame, "ย้อนกลับ", lambda: app.show("confirm"), fontsize=self.fs(26), width=12).pack(side="right", padx=4)
 
