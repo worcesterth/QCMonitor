@@ -44,21 +44,13 @@ def _load_thumb(path: str, height: int):
         return None
 
 
-def _bind_click(widget, cmd):
-    """Bind click recursively so the whole bar is clickable."""
-    widget.bind("<Button-1>", lambda _: cmd())
-    widget.configure(cursor="hand2")
-    for child in widget.winfo_children():
-        _bind_click(child, cmd)
-
-
 class SelectTypeScreen(BaseScreen):
     def __init__(self, parent, app):
         super().__init__(parent, app)
         self._thumbs = []
 
         card = self.card(self)
-        card_h = max(680, int(980 * self._s))
+        card_h = max(620, int(900 * self._s))
         card.place(relx=0.5, rely=0.5, anchor="center", width=self.CARD_W, height=card_h)
 
         self.card_header(card, "โปรแกรมตรวจคุณภาพหน้าจอ", size=self.fs(24))
@@ -69,6 +61,7 @@ class SelectTypeScreen(BaseScreen):
         self.title_label(body, "โปรดเลือกชนิดหน้าจอ", size=self.fs(36)).pack(pady=(10, 14))
 
         thumb_h = max(74, int(94 * self._s))
+        small_font = thai_font(self.fs(20))
 
         for info in _TYPES:
             img_path = os.path.join(_DISPLAY_DIR, info["img"])
@@ -76,51 +69,50 @@ class SelectTypeScreen(BaseScreen):
             if thumb:
                 self._thumbs.append(thumb)
 
-            outer = tk.Frame(body, bg=CARD_COLOR)
-            outer.pack(fill="x", pady=5)
+            # ── orange bar ──────────────────────────────────────────────
+            bar = tk.Frame(body, bg=BTN_BG, cursor="hand2")
+            bar.pack(fill="x", pady=5)
 
-            # ── main bar (full-width orange, image + title + desc) ───────
-            bar = tk.Frame(outer, bg=BTN_BG)
-            bar.pack(fill="x")
-
+            # image (left)
             if thumb:
-                tk.Label(bar, image=thumb, bg=BTN_BG,
-                         padx=8, pady=8).pack(side="left")
+                img_lbl = tk.Label(bar, image=thumb, bg=BTN_BG, padx=8, pady=6)
+                img_lbl.pack(side="left")
 
+            # right side: title row (top) + info-btn row (bottom)
             text_side = tk.Frame(bar, bg=BTN_BG)
-            text_side.pack(side="left", fill="both", expand=True,
-                           padx=(4, 10), pady=6)
+            text_side.pack(side="left", fill="both", expand=True, padx=(4, 10))
 
-            tk.Label(text_side, text=info["label"],
-                     font=thai_font(self.fs(30), "bold"),
-                     bg=BTN_BG, fg=BTN_FG,
-                     justify="center", anchor="center").pack(fill="x")
+            title_lbl = tk.Label(text_side, text=info["label"],
+                                 font=thai_font(self.fs(30), "bold"),
+                                 bg=BTN_BG, fg=BTN_FG,
+                                 justify="center", anchor="center")
+            title_lbl.pack(fill="x", pady=(8, 4))
 
-            tk.Label(text_side, text=info["desc"],
-                     font=thai_font(self.fs(22)),
-                     bg=BTN_BG, fg=BTN_FG,
-                     justify="center", anchor="center",
-                     wraplength=1).pack(fill="x")
+            # info button — bottom-left, small, inside orange bar
+            info_btn = tk.Button(text_side, text="ℹ นิยาม",
+                                 font=small_font,
+                                 bg=BTN_BG, fg="#3a3a3a",
+                                 relief="flat", bd=0,
+                                 activebackground=BTN_ACTIVE,
+                                 activeforeground="#1a1a1a",
+                                 cursor="hand2",
+                                 command=lambda i=info, ip=img_path: self._show_info(i, ip))
+            info_btn.pack(anchor="w", padx=2, pady=(0, 6))
 
-            _bind_click(bar, lambda k=info["key"]: self._select(k))
+            # click the bar (or image/title) → select type
+            select_cmd = lambda k=info["key"]: self._select(k)
+            for w in (bar, title_lbl) + ((img_lbl,) if thumb else ()):
+                w.bind("<Button-1>", lambda _, c=select_cmd: c())
 
-            # hover effect
-            def _enter(_, w=bar): w.configure(bg=BTN_ACTIVE)
-            def _leave(_, w=bar): w.configure(bg=BTN_BG)
-            bar.bind("<Enter>", _enter)
-            bar.bind("<Leave>", _leave)
-            for child in bar.winfo_children():
-                child.bind("<Enter>", _enter)
-                child.bind("<Leave>", _leave)
-                for grandchild in child.winfo_children():
-                    grandchild.bind("<Enter>", _enter)
-                    grandchild.bind("<Leave>", _leave)
-
-            # auto-wrap description label when bar resizes
-            desc_lbl = text_side.winfo_children()[-1]
-            bar.bind("<Configure>",
-                     lambda e, lbl=desc_lbl: lbl.configure(
-                         wraplength=max(60, e.width - (thumb_h * 2) - 40)))
+            # hover effect (excluding info_btn)
+            hover_widgets = [bar, text_side, title_lbl] + ([img_lbl] if thumb else [])
+            def _enter(_, ws=hover_widgets):
+                for w in ws: w.configure(bg=BTN_ACTIVE)
+            def _leave(_, ws=hover_widgets):
+                for w in ws: w.configure(bg=BTN_BG)
+            for w in hover_widgets:
+                w.bind("<Enter>", _enter)
+                w.bind("<Leave>", _leave)
 
         bottom = tk.Frame(card, bg=CARD_COLOR)
         bottom.pack(side="bottom", fill="x", padx=16, pady=12)
@@ -131,3 +123,43 @@ class SelectTypeScreen(BaseScreen):
         self.app.session["screen_type"] = screen_type
         self.app.show("select_period")
 
+    def _show_info(self, info: dict, img_path: str):
+        popup = tk.Toplevel(self)
+        popup.title(info["label"].replace("\n", " "))
+        popup.configure(bg=CARD_COLOR)
+        popup.resizable(False, False)
+        popup.grab_set()
+
+        try:
+            img = Image.open(img_path).convert("RGB")
+            pw = 420
+            ph = int(img.height * pw / img.width)
+            img = img.resize((pw, ph), Image.LANCZOS)
+            photo = ImageTk.PhotoImage(img)
+            self._thumbs.append(photo)
+            tk.Label(popup, image=photo, bg=CARD_COLOR).pack(padx=20, pady=(16, 8))
+        except Exception:
+            pass
+
+        tk.Label(popup, text=info["label"],
+                 font=thai_font(self.fs(28), "bold"),
+                 bg=CARD_COLOR, fg=TEXT_COLOR,
+                 justify="center").pack(padx=20)
+
+        tk.Label(popup, text=info["desc"],
+                 font=thai_font(self.fs(24)),
+                 bg=CARD_COLOR, fg=TEXT_COLOR,
+                 justify="left", wraplength=400).pack(padx=20, pady=(10, 14))
+
+        tk.Button(popup, text="ปิด",
+                  font=thai_font(self.fs(24)),
+                  bg="#e0e0e0", fg=TEXT_COLOR,
+                  relief="flat", padx=20, pady=6,
+                  cursor="hand2", command=popup.destroy).pack(pady=(0, 16))
+
+        popup.update_idletasks()
+        w = popup.winfo_width()
+        h = popup.winfo_height()
+        x = (popup.winfo_screenwidth() - w) // 2
+        y = (popup.winfo_screenheight() - h) // 2
+        popup.geometry(f"+{x}+{y}")
