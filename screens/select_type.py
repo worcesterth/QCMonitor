@@ -73,23 +73,28 @@ class SelectTypeScreen(BaseScreen):
             bar = tk.Frame(body, bg=BTN_BG, cursor="hand2")
             bar.pack(fill="x", pady=5)
 
-            # image (left)
+            # top area: image + title centered together
+            top_area = tk.Frame(bar, bg=BTN_BG)
+            top_area.pack(fill="x", pady=(8, 2))
+
+            content = tk.Frame(top_area, bg=BTN_BG)
+            content.pack(expand=True)  # centers horizontally
+
             if thumb:
-                img_lbl = tk.Label(bar, image=thumb, bg=BTN_BG, padx=0, pady=0)
-                img_lbl.pack(side="left")
+                img_lbl = tk.Label(content, image=thumb, bg=BTN_BG)
+                img_lbl.pack(side="left", padx=(0, 14))
 
-            # right side: title row (top) + info-btn row (bottom)
-            text_side = tk.Frame(bar, bg=BTN_BG)
-            text_side.pack(side="left", fill="both", expand=True, padx=(4, 10))
-
-            title_lbl = tk.Label(text_side, text=info["label"],
+            title_lbl = tk.Label(content, text=info["label"],
                                  font=thai_font(self.fs(30), "bold"),
                                  bg=BTN_BG, fg=BTN_FG,
-                                 justify="center", anchor="center")
-            title_lbl.pack(fill="x", pady=(8, 4))
+                                 justify="left", anchor="w")
+            title_lbl.pack(side="left")
 
-            # info button — bottom-left, small, inside orange bar
-            info_btn = tk.Button(text_side, text="ℹ นิยาม",
+            # bottom area: info btn at right
+            bottom_area = tk.Frame(bar, bg=BTN_BG)
+            bottom_area.pack(fill="x")
+
+            info_btn = tk.Button(bottom_area, text="ℹ นิยาม",
                                  font=small_font,
                                  bg=BTN_BG, fg="#3a3a3a",
                                  relief="flat", bd=0,
@@ -97,15 +102,15 @@ class SelectTypeScreen(BaseScreen):
                                  activeforeground="#1a1a1a",
                                  cursor="hand2",
                                  command=lambda i=info, ip=img_path: self._show_info(i, ip))
-            info_btn.pack(anchor="e", padx=8, pady=(0, 6))
+            info_btn.pack(side="right", padx=8, pady=(0, 6))
 
             # click the bar (or image/title) → select type
             select_cmd = lambda k=info["key"]: self._select(k)
-            for w in (bar, title_lbl) + ((img_lbl,) if thumb else ()):
+            for w in (bar, top_area, content, bottom_area, title_lbl) + ((img_lbl,) if thumb else ()):
                 w.bind("<Button-1>", lambda _, c=select_cmd: c())
 
             # hover effect (excluding info_btn)
-            hover_widgets = [bar, text_side, title_lbl] + ([img_lbl] if thumb else [])
+            hover_widgets = [bar, top_area, content, bottom_area, title_lbl] + ([img_lbl] if thumb else [])
             def _enter(_, ws=hover_widgets):
                 for w in ws: w.configure(bg=BTN_ACTIVE)
             def _leave(_, ws=hover_widgets):
