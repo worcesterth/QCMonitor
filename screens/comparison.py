@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 from screens.base import (
     BaseScreen, BG_COLOR, CARD_COLOR, TEXT_COLOR, BORDER_CLR,
-    PASS_GREEN, FAIL_RED, thai_font, HEADER_BG, HDR_TEXT, count_fc,
+    PASS_GREEN, FAIL_RED, ENTRY_BG, thai_font, HEADER_BG, HDR_TEXT, count_fc,
 )
 from config import TEST_CONFIG
 
@@ -137,18 +137,40 @@ class ComparisonScreen(BaseScreen):
 
     # ── table helpers ─────────────────────────────────────────────────────
 
-    def _build_row(self, parent, values, bg, fg, font, pady=6):
-        """col สุดท้ายใช้ Text(wrap=word) เพื่อไม่ตัดกลางคำไทย"""
+    def _build_row(self, parent, values, bg, fg, font, pady=6,
+                   edit_last=False, row_idx=0):
+        """col สุดท้ายใช้ Text(wrap=word); edit_last=True เพิ่ม pencil ใน col สุดท้าย"""
         row = tk.Frame(parent, bg=bg)
         row.pack(fill="x")
         for i, wt in enumerate(_WEIGHTS):
             row.columnconfigure(i, weight=wt)
 
+        small = thai_font(self.fs(22))
         labels = []
+
         for i, (text, anchor) in enumerate(zip(values, _ANCHORS)):
-            if anchor == "w":  # left-aligned cols → Text(wrap=word) ไม่ตัดกลางคำไทย
+            is_last = edit_last and (i == len(values) - 1)
+
+            if anchor == "w":
                 cell = tk.Frame(row, bg=bg)
                 cell.grid(row=0, column=i, sticky="nsew")
+
+                if is_last:
+                    # pencil row at top
+                    top = tk.Frame(cell, bg=bg)
+                    top.pack(fill="x", padx=4, pady=(4, 0))
+
+                    pencil_btn = tk.Button(top, text="✏", font=small, bg=bg,
+                                           fg="#888888", relief="flat", bd=0,
+                                           padx=4, cursor="hand2")
+                    pencil_btn.pack(side="right")
+
+                    note_var = tk.StringVar(value="")
+                    tk.Label(top, textvariable=note_var, font=small,
+                             fg="#555555", bg=bg, anchor="w",
+                             justify="left").pack(side="left", fill="x", expand=True)
+
+                # description Text (read-only)
                 txt = tk.Text(cell, font=font, fg=fg, bg=bg,
                               wrap="word", padx=10, pady=pady,
                               relief="flat", borderwidth=0,
@@ -172,8 +194,48 @@ class ComparisonScreen(BaseScreen):
                         lh[0] = h
                         w.configure(height=h)
                 cell.bind("<Configure>", _refit)
+
+                if is_last:
+                    # edit row (hidden)
+                    edit = tk.Frame(cell, bg=bg)
+                    raw_var = tk.StringVar(value="")
+                    entry = tk.Entry(edit, textvariable=raw_var, font=small,
+                                     bg=ENTRY_BG, fg=TEXT_COLOR, relief="solid",
+                                     bd=1, insertbackground=TEXT_COLOR)
+                    entry.pack(side="left", fill="x", expand=True, padx=(6, 0))
+                    ok_btn = tk.Button(edit, text="✓", font=small, bg="#4caf50",
+                                       fg="white", relief="flat", bd=0, padx=6,
+                                       cursor="hand2")
+                    ok_btn.pack(side="left", padx=(4, 4))
+
+                    _ri = row_idx
+                    def _confirm(event=None, _nv=note_var, _rv=raw_var,
+                                 _ed=edit, _tp=top, _ri=_ri):
+                        val = _rv.get()
+                        _nv.set(f"*{val}" if val else "")
+                        if _ri < len(self._rows_data):
+                            self._rows_data[_ri]["user_note"] = val
+                        _ed.pack_forget()
+                        _tp.pack(fill="x", padx=4, pady=(4, 0))
+                        self.update_idletasks()
+                        self._canvas.configure(scrollregion=self._canvas.bbox("all"))
+
+                    def _start(_nv=note_var, _rv=raw_var,
+                               _ed=edit, _tp=top, _en=entry):
+                        curr = _nv.get()
+                        _rv.set(curr[1:] if curr.startswith("*") else curr)
+                        _tp.pack_forget()
+                        _ed.pack(fill="x", padx=2, pady=(4, 2))
+                        _en.focus_set()
+                        _en.icursor("end")
+
+                    ok_btn.configure(command=_confirm)
+                    pencil_btn.configure(command=_start)
+                    entry.bind("<Return>", _confirm)
+                    entry.bind("<Escape>", lambda _, c=_confirm: c())
+
                 labels.append(txt)
-            else:  # centered cols (Baseline, ครั้งนี้) → Label ชิดบน
+            else:
                 lbl = tk.Label(row, text=text, font=font, fg=fg, bg=bg,
                                anchor="n", padx=10, pady=pady,
                                wraplength=200, justify="center")
@@ -287,11 +349,6 @@ class ComparisonScreen(BaseScreen):
                 row_idx += 1
 
                 display_title = item.get("criteria_title", item["title"])
-                self._build_row(
-                    self._body,
-                    [f"  {display_title}", b_text, c_text, result_text, description],
-                    row_bg, fg, thai_font(26), pady=10,
-                )
                 self._rows_data.append({
                     "is_group":    False,
                     "title":       f"  {display_title}",
@@ -300,7 +357,14 @@ class ComparisonScreen(BaseScreen):
                     "result_text": result_text,
                     "description": description,
                     "tag":         tag,
+                    "user_note":   "",
                 })
+                self._build_row(
+                    self._body,
+                    [f"  {display_title}", b_text, c_text, result_text, description],
+                    row_bg, fg, thai_font(26), pady=10,
+                    edit_last=True, row_idx=len(self._rows_data) - 1,
+                )
 
         self.update_idletasks()
         self._canvas.configure(scrollregion=self._canvas.bbox("all"))
