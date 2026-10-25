@@ -26,6 +26,12 @@ class LoginScreen(BaseScreen):
         style.map("Login.TCombobox",
                   fieldbackground=[("readonly", ENTRY_BG)],
                   foreground=[("readonly", TEXT_COLOR)])
+        # ขยาย font ของ dropdown list (listbox ที่ pop ขึ้นมา)
+        self.app.option_add("*TCombobox*Listbox.font", (fname, fsize))
+        self.app.option_add("*TCombobox*Listbox.foreground", TEXT_COLOR)
+        self.app.option_add("*TCombobox*Listbox.background", ENTRY_BG)
+        self.app.option_add("*TCombobox*Listbox.selectBackground", "#4a90d9")
+        self.app.option_add("*TCombobox*Listbox.selectForeground", "white")
 
         card = self.card(self)
         card.place(relx=0.5, rely=0.5, anchor="center", width=self.CARD_W, height=self.CARD_HL)
