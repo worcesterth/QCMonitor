@@ -26,7 +26,7 @@ jobs:
         run: |
           python -c "
           from PIL import Image
-          img = Image.open('assets/logo/App_Logo.png').convert('RGBA')
+          img = Image.open('assets/logo/App_Logo.jpg').convert('RGBA')
           img.save('app_icon.ico', format='ICO', sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])
           "
 
@@ -67,7 +67,7 @@ jobs:
         run: |
           pyinstaller --noconfirm --onedir --windowed \
             --name "MonitorQC" \
-            --icon "assets/logo/AppIcon.icns" \
+            --icon "assets/logo/AppIcon.jpg" \
             --add-data "assets:assets" \
             --add-data "screens:screens" \
             --add-data "reports:reports" \
