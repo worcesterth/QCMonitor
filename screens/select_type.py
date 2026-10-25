@@ -71,7 +71,7 @@ class SelectTypeScreen(BaseScreen):
 
             # ── orange bar ──────────────────────────────────────────────
             bar = tk.Frame(body, bg=BTN_BG, cursor="hand2")
-            bar.pack(fill="x", pady=3, padx=40)
+            bar.pack(fill="x", pady=3, padx=110)
 
             # image — flush left
             if thumb:
