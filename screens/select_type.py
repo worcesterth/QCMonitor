@@ -34,11 +34,14 @@ _TYPES = [
 ]
 
 
-def _load_thumb(path: str, height: int):
+def _load_thumb(path: str, size: int):
     try:
         img = Image.open(path).convert("RGB")
-        w = int(img.width * height / img.height)
-        img = img.resize((w, height), Image.LANCZOS)
+        w, h = img.size
+        m = min(w, h)
+        img = img.crop(((w - m) // 2, (h - m) // 2,
+                        (w + m) // 2, (h + m) // 2))
+        img = img.resize((size, size), Image.LANCZOS)
         return ImageTk.PhotoImage(img)
     except Exception:
         return None
