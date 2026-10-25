@@ -97,7 +97,7 @@ class SelectTypeScreen(BaseScreen):
                                  activeforeground="#1a1a1a",
                                  cursor="hand2",
                                  command=lambda i=info, ip=img_path: self._show_info(i, ip))
-            info_btn.pack(anchor="w", padx=2, pady=(0, 6))
+            info_btn.pack(anchor="e", padx=8, pady=(0, 6))
 
             # click the bar (or image/title) → select type
             select_cmd = lambda k=info["key"]: self._select(k)
