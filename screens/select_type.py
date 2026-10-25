@@ -60,7 +60,7 @@ class SelectTypeScreen(BaseScreen):
 
         self.title_label(body, "โปรดเลือกชนิดหน้าจอ", size=self.fs(36)).pack(pady=(10, 14))
 
-        thumb_h = max(58, int(72 * self._s))
+        thumb_h = max(80, int(100 * self._s))
         small_font = thai_font(self.fs(20))
 
         for info in _TYPES:
@@ -71,7 +71,7 @@ class SelectTypeScreen(BaseScreen):
 
             # ── orange bar ──────────────────────────────────────────────
             bar = tk.Frame(body, bg=BTN_BG, cursor="hand2")
-            bar.pack(fill="x", pady=5)
+            bar.pack(fill="x", pady=3)
 
             # image — flush left
             if thumb:
@@ -86,19 +86,19 @@ class SelectTypeScreen(BaseScreen):
                                  font=thai_font(self.fs(30), "bold"),
                                  bg=BTN_BG, fg=BTN_FG,
                                  justify="left", anchor="w",
-                                 padx=14, pady=4)
+                                 padx=14, pady=2)
             title_lbl.pack(fill="x", expand=True)
 
-            # "ℹ นิยาม" — bordered button (original style), bottom-right
+            # "ℹ นิยาม" — no border, plain
             info_btn = tk.Button(right, text="ℹ  นิยาม",
                                  font=small_font,
-                                 bg=CARD_COLOR, fg="#3a3a3a",
-                                 relief="solid", bd=1, padx=8, pady=2,
-                                 activebackground="#e8e8e8",
+                                 bg=BTN_BG, fg="#3a3a3a",
+                                 relief="flat", bd=0, padx=8, pady=2,
+                                 activebackground=BTN_ACTIVE,
                                  activeforeground="#111111",
                                  cursor="hand2",
                                  command=lambda i=info, ip=img_path: self._show_info(i, ip))
-            info_btn.pack(side="right", anchor="e", padx=6, pady=4)
+            info_btn.pack(side="right", anchor="e", padx=6, pady=2)
 
             # click bar / image / title → select type
             select_cmd = lambda k=info["key"]: self._select(k)
