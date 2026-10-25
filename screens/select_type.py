@@ -72,11 +72,18 @@ class SelectTypeScreen(BaseScreen):
             if thumb:
                 self._thumbs.append(thumb)
 
-            # ── orange bar ──────────────────────────────────────────────
-            bar = tk.Frame(body, bg=BTN_BG, cursor="hand2")
-            bar.pack(fill="x", pady=3, padx=110)
+            # ── row: image (outside, left) + orange bar (right) ─────────
+            row = tk.Frame(body, bg=CARD_COLOR)
+            row.pack(fill="x", pady=3, padx=110)
 
-            img_lbl = None  # image hidden for now
+            if thumb:
+                img_lbl = tk.Label(row, image=thumb, bg=CARD_COLOR)
+                img_lbl.pack(side="left", padx=(0, 8))
+            else:
+                img_lbl = None
+
+            bar = tk.Frame(row, bg=BTN_BG, cursor="hand2")
+            bar.pack(side="left", fill="both", expand=True)
 
             # right side: title (top) + info link (bottom-right)
             right = tk.Frame(bar, bg=BTN_BG)
@@ -101,11 +108,12 @@ class SelectTypeScreen(BaseScreen):
 
             # click bar / image / title → select type
             select_cmd = lambda k=info["key"]: self._select(k)
-            for w in (bar, right, title_lbl) + ((img_lbl,) if img_lbl else ()):
+            click_w = [bar, right, title_lbl] + ([img_lbl] if img_lbl else [])
+            for w in click_w:
                 w.bind("<Button-1>", lambda _, c=select_cmd: c())
 
-            # hover (excluding info_btn)
-            hover_w = [bar, right, title_lbl] + ([img_lbl] if img_lbl else [])
+            # hover — only orange bar widgets change color (image bg stays card color)
+            hover_w = [bar, right, title_lbl]
             def _enter(_, ws=hover_w):
                 for w in ws: w.configure(bg=BTN_ACTIVE)
             def _leave(_, ws=hover_w):
