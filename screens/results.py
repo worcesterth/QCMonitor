@@ -198,34 +198,32 @@ class ResultsScreen(BaseScreen):
                                 thai_font(self.fs(26), "bold"), pady=10)
 
             ans = answers.get(item["item_id"])
+            user_note = ""
+            sys_notes = ""
             if ans:
                 result_text = "ผ่าน" if ans["passed"] else "ไม่ผ่าน"
                 fg = PASS_GREEN if ans["passed"] else FAIL_RED
                 user_note = ans.get("notes", "")
-                notes = ""
                 if ans.get("failed_channels"):
                     fc = ans["failed_channels"]
                     ch_str = ", ".join(str(c) for c in fc)
                     if item.get("question_type") == "yes_no_channels_text":
-                        notes = (f"จำนวนภาพที่ Pixel ไม่สม่ำเสมอ: {count_fc(fc)} ภาพ\n"
-                                 f"ภาพที่ไม่เห็น: {ch_str}")
+                        sys_notes = (f"จำนวนภาพที่ Pixel ไม่สม่ำเสมอ: {count_fc(fc)} ภาพ\n"
+                                     f"ภาพที่ไม่เห็น: {ch_str}")
                     else:
                         ch_lbl = item.get("channel_label", "ช่อง")
                         note_prefix = item.get("channel_note", f"{ch_lbl}ที่ไม่เห็น")
                         count_lbl = item.get("count_label")
                         if count_lbl:
-                            notes = (f"{count_lbl}: {count_fc(fc)}\n"
-                                     f"{note_prefix}: {ch_str}")
+                            sys_notes = (f"{count_lbl}: {count_fc(fc)}\n"
+                                         f"{note_prefix}: {ch_str}")
                         else:
-                            notes = f"{note_prefix}: {ch_str}"
-                if user_note:
-                    notes = (notes + "\n" if notes else "") + f"*{user_note}"
+                            sys_notes = f"{note_prefix}: {ch_str}"
                 if not ans["passed"]:
                     overall_pass = False
             else:
                 result_text = "ไม่ได้ตอบ"
                 fg = "#888888"
-                notes = ""
                 overall_pass = False
 
             row_bg = CARD_COLOR if row_idx % 2 == 0 else ALT_ROW
@@ -250,8 +248,8 @@ class ResultsScreen(BaseScreen):
             note_cell = tk.Frame(row, bg=row_bg)
             note_cell.grid(row=0, column=2, sticky="nsew")
 
-            if notes and ans:
-                sys_lbl = tk.Label(note_cell, text=notes, font=font, fg=fg, bg=row_bg,
+            if sys_notes:
+                sys_lbl = tk.Label(note_cell, text=sys_notes, font=font, fg=fg, bg=row_bg,
                                    anchor="w", padx=10, pady=(8, 2),
                                    justify="left", wraplength=200)
                 sys_lbl.pack(anchor="w", fill="x")
@@ -259,6 +257,8 @@ class ResultsScreen(BaseScreen):
 
             if ans:
                 self._build_note_editor(note_cell, row_bg, user_note, item["item_id"])
+            else:
+                tk.Label(note_cell, text="", bg=row_bg).pack()
 
         session["overall_pass"] = overall_pass
         self.update_idletasks()
