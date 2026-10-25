@@ -95,17 +95,9 @@ class ResultsScreen(BaseScreen):
         small = thai_font(self.fs(22))
         base  = thai_font(self.fs(26))
 
-        # 1. sys_notes — read-only label
-        if sys_notes:
-            sys_lbl = tk.Label(parent, text=sys_notes, font=base, fg=fg, bg=bg,
-                               anchor="w", padx=10, pady=(8, 2),
-                               justify="left", wraplength=200)
-            sys_lbl.pack(anchor="w", fill="x")
-            self._note_labels.append(sys_lbl)
-
-        # 2. display row — pack pencil (right) FIRST so it always gets space
+        # 1. display row at TOP — pack pencil (right) FIRST so it always shows top-right
         disp = tk.Frame(parent, bg=bg)
-        disp.pack(fill="x", padx=6, pady=(2, 4))
+        disp.pack(fill="x", padx=6, pady=(4, 0))
 
         pencil_btn = tk.Button(disp, text="✏", font=small, bg=bg, fg="#888888",
                                relief="flat", bd=0, padx=4, cursor="hand2")
@@ -115,6 +107,14 @@ class ResultsScreen(BaseScreen):
         note_disp = tk.Label(disp, textvariable=note_var, font=small,
                              fg="#555555", bg=bg, anchor="w", justify="left")
         note_disp.pack(side="left", fill="x", expand=True)
+
+        # 2. sys_notes below pencil row (read-only)
+        if sys_notes:
+            sys_lbl = tk.Label(parent, text=sys_notes, font=base, fg=fg, bg=bg,
+                               anchor="w", padx=10,
+                               justify="left", wraplength=200)
+            sys_lbl.pack(anchor="w", fill="x", pady=(2, 6))
+            self._note_labels.append(sys_lbl)
 
         # 3. edit row (hidden until pencil clicked)
         edit = tk.Frame(parent, bg=bg)
@@ -134,7 +134,7 @@ class ResultsScreen(BaseScreen):
                 a["notes"] = val
             note_var.set(f"*{val}" if val else "")
             edit.pack_forget()
-            disp.pack(fill="x", padx=6, pady=(2, 4))
+            disp.pack(fill="x", padx=6, pady=(4, 0))
             self.update_idletasks()
             self._canvas.configure(scrollregion=self._canvas.bbox("all"))
 
@@ -142,7 +142,7 @@ class ResultsScreen(BaseScreen):
             curr = note_var.get()
             raw_var.set(curr[1:] if curr.startswith("*") else curr)
             disp.pack_forget()
-            edit.pack(fill="x", padx=2, pady=(2, 4))
+            edit.pack(fill="x", padx=2, pady=(4, 2))
             entry.focus_set()
             entry.icursor("end")
 
