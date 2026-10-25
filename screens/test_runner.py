@@ -342,7 +342,7 @@ class TestRunnerScreen(BaseScreen):
         n = item.get("image_index", 1)
 
         for p_try in [p, "y", "m", "3m"]:
-            for ext in ("png", "TIFF", "tiff", "jpg", "jpeg"):
+            for ext in ("tif", "tiff", "TIFF", "png", "jpg", "jpeg"):
                 fname = f"{t}_{p_try}_{n}.{ext}"
                 if os.path.exists(os.path.join(PATTERN_DIR, fname)):
                     return fname
