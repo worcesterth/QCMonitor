@@ -156,21 +156,15 @@ class ComparisonScreen(BaseScreen):
                 cell.grid(row=0, column=i, sticky="nsew")
 
                 if is_last:
-                    # pencil row at top
+                    # pencil row at top — always visible
                     top = tk.Frame(cell, bg=bg)
                     top.pack(fill="x", padx=4, pady=(4, 0))
-
                     pencil_btn = tk.Button(top, text="✏", font=small, bg=bg,
                                            fg="#888888", relief="flat", bd=0,
                                            padx=4, cursor="hand2")
                     pencil_btn.pack(side="right")
 
-                    note_var = tk.StringVar(value="")
-                    tk.Label(top, textvariable=note_var, font=small,
-                             fg="#555555", bg=bg, anchor="w",
-                             justify="left").pack(side="left", fill="x", expand=True)
-
-                # description Text (read-only)
+                # description Text (read-only display)
                 txt = tk.Text(cell, font=font, fg=fg, bg=bg,
                               wrap="word", padx=10, pady=pady,
                               relief="flat", borderwidth=0,
@@ -196,43 +190,49 @@ class ComparisonScreen(BaseScreen):
                 cell.bind("<Configure>", _refit)
 
                 if is_last:
-                    # edit row (hidden)
+                    # edit frame (hidden) — multiline editable Text
                     edit = tk.Frame(cell, bg=bg)
-                    raw_var = tk.StringVar(value="")
-                    entry = tk.Entry(edit, textvariable=raw_var, font=small,
-                                     bg=ENTRY_BG, fg=TEXT_COLOR, relief="solid",
-                                     bd=1, insertbackground=TEXT_COLOR)
-                    entry.pack(side="left", fill="x", expand=True, padx=(6, 0))
-                    ok_btn = tk.Button(edit, text="✓", font=small, bg="#4caf50",
-                                       fg="white", relief="flat", bd=0, padx=6,
+                    edit_txt = tk.Text(edit, font=small, fg=TEXT_COLOR, bg=ENTRY_BG,
+                                       wrap="word", relief="solid", bd=1, height=4,
+                                       insertbackground=TEXT_COLOR, padx=6, pady=4)
+                    edit_txt.pack(fill="x", padx=(6, 0))
+                    ok_btn = tk.Button(edit, text="✓ บันทึก", font=small, bg="#4caf50",
+                                       fg="white", relief="flat", bd=0, padx=8,
                                        cursor="hand2")
-                    ok_btn.pack(side="left", padx=(4, 4))
+                    ok_btn.pack(anchor="e", padx=(4, 6), pady=(2, 2))
 
-                    _ri = row_idx
-                    def _confirm(event=None, _nv=note_var, _rv=raw_var,
-                                 _ed=edit, _tp=top, _ri=_ri):
-                        val = _rv.get()
-                        _nv.set(f"*{val}" if val else "")
+                    _desc = [text]
+                    _ri   = row_idx
+                    _fg   = fg
+
+                    def _confirm(event=None, _disp=txt, _etxt=edit_txt,
+                                 _ed=edit, _d=_desc, _ri=_ri, _fg=_fg):
+                        val = _etxt.get("1.0", "end-1c")
+                        _d[0] = val
+                        _disp.configure(state="normal")
+                        _disp.delete("1.0", "end")
+                        _disp.tag_configure("c", foreground=_fg)
+                        _disp.insert("1.0", val, "c")
+                        _disp.configure(state="disabled")
                         if _ri < len(self._rows_data):
-                            self._rows_data[_ri]["user_note"] = val
+                            self._rows_data[_ri]["description"] = val
                         _ed.pack_forget()
-                        _tp.pack(fill="x", padx=4, pady=(4, 0))
+                        _disp.pack(fill="x")
                         self.update_idletasks()
                         self._canvas.configure(scrollregion=self._canvas.bbox("all"))
 
-                    def _start(_nv=note_var, _rv=raw_var,
-                               _ed=edit, _tp=top, _en=entry):
-                        curr = _nv.get()
-                        _rv.set(curr[1:] if curr.startswith("*") else curr)
-                        _tp.pack_forget()
+                    def _start(_disp=txt, _etxt=edit_txt,
+                               _ed=edit, _d=_desc):
+                        _etxt.delete("1.0", "end")
+                        _etxt.insert("1.0", _d[0])
+                        _disp.pack_forget()
                         _ed.pack(fill="x", padx=2, pady=(4, 2))
-                        _en.focus_set()
-                        _en.icursor("end")
+                        _etxt.focus_set()
+                        _etxt.mark_set("insert", "end")
 
                     ok_btn.configure(command=_confirm)
                     pencil_btn.configure(command=_start)
-                    entry.bind("<Return>", _confirm)
-                    entry.bind("<Escape>", lambda _, c=_confirm: c())
+                    edit_txt.bind("<Escape>", lambda _, c=_confirm: c())
 
                 labels.append(txt)
             else:
@@ -357,7 +357,6 @@ class ComparisonScreen(BaseScreen):
                     "result_text": result_text,
                     "description": description,
                     "tag":         tag,
-                    "user_note":   "",
                 })
                 self._build_row(
                     self._body,

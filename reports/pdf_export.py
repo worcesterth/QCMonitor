@@ -289,10 +289,7 @@ def export_comparison(current: dict, baseline: dict, row_data: list, filepath: s
             ]
         else:
             fg = TAG_FG.get(row["tag"], colors.black)
-            user_note = row.get("user_note", "")
-            desc_text = row["description"]
-            if user_note:
-                desc_text = desc_text + f"\n*{user_note}"
+            desc_text = row.get("description", "")
             data.append([
                 _p(row["title"],       11, fg=fg),
                 _p(row["b_text"],      11, fg=fg, align="CENTER"),
