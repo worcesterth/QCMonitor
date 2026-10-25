@@ -210,6 +210,16 @@ def save_evaluation(session: dict) -> int:
         return eval_id
 
 
+def update_answer_note(evaluation_id: int, item_id: str, note: str):
+    """อัปเดตหมายเหตุของคำตอบหนึ่งรายการ"""
+    init_db()
+    with _conn() as c:
+        c.execute(
+            "UPDATE answers SET notes=? WHERE evaluation_id=? AND item_id=?",
+            (note, evaluation_id, item_id),
+        )
+
+
 def set_as_baseline(evaluation_id: int):
     """ตั้งค่า evaluation นี้เป็น baseline (ยกเลิก baseline เก่าของ type+period เดิมก่อน)"""
     init_db()
