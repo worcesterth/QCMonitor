@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 from screens.base import (
     BaseScreen, BG_COLOR, CARD_COLOR, TEXT_COLOR,
-    BORDER_CLR, PASS_GREEN, FAIL_RED, thai_font, count_fc,
+    BORDER_CLR, PASS_GREEN, FAIL_RED, ENTRY_BG, thai_font, count_fc,
 )
 
 _HEADS      = ["หัวข้อการประเมิน", "ผลการประเมิน", "หมายเหตุ"]
@@ -97,7 +97,7 @@ class ResultsScreen(BaseScreen):
     def _refresh_note_wrap(self, canvas_w=None):
         if canvas_w is None:
             canvas_w = self._canvas.winfo_width()
-        note_w = max(80, canvas_w - sum(self._widths) - 12)
+        note_w = max(80, canvas_w - sum(self._widths) - 32)
         for lbl in self._note_labels:
             lbl.configure(wraplength=note_w)
 
@@ -178,11 +178,50 @@ class ResultsScreen(BaseScreen):
 
             row_bg = CARD_COLOR if row_idx % 2 == 0 else ALT_ROW
             row_idx += 1
-            note_lbl = self._build_row(self._body,
-                                       [f"  {item['title']}", result_text, notes],
-                                       row_bg, fg, thai_font(self.fs(26)), pady=8)
-            if note_lbl:
-                self._note_labels.append(note_lbl)
+            font = thai_font(self.fs(26))
+
+            row = tk.Frame(self._body, bg=row_bg)
+            row.pack(fill="x")
+            for i, w in enumerate(self._widths):
+                row.columnconfigure(i, minsize=w, weight=0)
+            row.columnconfigure(len(self._widths), weight=1)
+
+            tk.Label(row, text=f"  {item['title']}", font=font, fg=fg, bg=row_bg,
+                     anchor="w", padx=10, pady=8,
+                     wraplength=max(0, self._widths[0] - 12), justify="left"
+                     ).grid(row=0, column=0, sticky="nsew")
+            tk.Label(row, text=result_text, font=font, fg=fg, bg=row_bg,
+                     anchor="center", padx=10, pady=8,
+                     wraplength=max(0, self._widths[1] - 12), justify="center"
+                     ).grid(row=0, column=1, sticky="nsew")
+
+            note_cell = tk.Frame(row, bg=row_bg)
+            note_cell.grid(row=0, column=2, sticky="nsew")
+
+            if notes and ans:
+                sys_lbl = tk.Label(note_cell, text=notes, font=font, fg=fg, bg=row_bg,
+                                   anchor="w", padx=10, pady=(8, 2),
+                                   justify="left", wraplength=200)
+                sys_lbl.pack(anchor="w", fill="x")
+                self._note_labels.append(sys_lbl)
+
+            if ans:
+                entry_row = tk.Frame(note_cell, bg=row_bg)
+                entry_row.pack(fill="x", padx=10, pady=(2, 8))
+                tk.Label(entry_row, text="หมายเหตุ:", font=thai_font(self.fs(22)),
+                         fg=TEXT_COLOR, bg=row_bg).pack(side="left")
+                entry_var = tk.StringVar(value=user_note)
+                entry = tk.Entry(entry_row, textvariable=entry_var,
+                                 font=thai_font(self.fs(22)),
+                                 bg=ENTRY_BG, fg=TEXT_COLOR, relief="flat", bd=1,
+                                 insertbackground=TEXT_COLOR)
+                entry.pack(side="left", fill="x", expand=True, padx=(4, 0))
+
+                def _on_note(var, iid=item["item_id"]):
+                    a = self.app.session["answers"].get(iid)
+                    if a is not None:
+                        a["notes"] = var.get()
+                entry_var.trace_add("write", lambda *_, v=entry_var, iid=item["item_id"]: _on_note(v, iid))
 
         session["overall_pass"] = overall_pass
         self.update_idletasks()
