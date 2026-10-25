@@ -90,6 +90,58 @@ class ResultsScreen(BaseScreen):
                 note_lbl = lbl
         return note_lbl
 
+    def _build_note_editor(self, parent, bg, initial_note, item_id):
+        """inline note editor: pencil icon → Entry + confirm"""
+        f = tk.Frame(parent, bg=bg)
+        f.pack(fill="x", padx=8, pady=(2, 6))
+
+        note_var = tk.StringVar(value=initial_note)
+        small_font = thai_font(self.fs(22))
+
+        # display row (note text + pencil button)
+        display_row = tk.Frame(f, bg=bg)
+        display_row.pack(fill="x")
+
+        note_lbl = tk.Label(display_row, textvariable=note_var,
+                            font=small_font, fg="#555555", bg=bg,
+                            anchor="w", justify="left", wraplength=300)
+        note_lbl.pack(side="left", fill="x", expand=True)
+
+        # edit row (hidden until pencil clicked)
+        edit_row = tk.Frame(f, bg=bg)
+        entry = tk.Entry(edit_row, textvariable=note_var, font=small_font,
+                         bg=ENTRY_BG, fg=TEXT_COLOR, relief="solid", bd=1,
+                         insertbackground=TEXT_COLOR)
+        entry.pack(side="left", fill="x", expand=True)
+
+        def confirm(event=None):
+            val = note_var.get()
+            a = self.app.session["answers"].get(item_id)
+            if a is not None:
+                a["notes"] = val
+            edit_row.pack_forget()
+            display_row.pack(fill="x")
+            self.update_idletasks()
+            self._canvas.configure(scrollregion=self._canvas.bbox("all"))
+
+        def start_edit():
+            display_row.pack_forget()
+            edit_row.pack(fill="x")
+            entry.focus_set()
+            entry.icursor("end")
+
+        ok_btn = tk.Button(edit_row, text="✓", font=small_font,
+                           bg="#4caf50", fg="white", relief="flat",
+                           bd=0, padx=6, cursor="hand2", command=confirm)
+        ok_btn.pack(side="left", padx=(4, 0))
+        entry.bind("<Return>", confirm)
+        entry.bind("<Escape>", lambda _: confirm())
+
+        pencil_btn = tk.Button(display_row, text="✏", font=small_font,
+                               bg=bg, fg="#888888", relief="flat", bd=0,
+                               cursor="hand2", command=start_edit)
+        pencil_btn.pack(side="right")
+
     def _on_canvas_resize(self, e):
         self._canvas.itemconfig(self._win, width=e.width)
         self._refresh_note_wrap(e.width)
@@ -206,22 +258,7 @@ class ResultsScreen(BaseScreen):
                 self._note_labels.append(sys_lbl)
 
             if ans:
-                entry_row = tk.Frame(note_cell, bg=row_bg)
-                entry_row.pack(fill="x", padx=10, pady=(2, 8))
-                tk.Label(entry_row, text="หมายเหตุ:", font=thai_font(self.fs(22)),
-                         fg=TEXT_COLOR, bg=row_bg).pack(side="left")
-                entry_var = tk.StringVar(value=user_note)
-                entry = tk.Entry(entry_row, textvariable=entry_var,
-                                 font=thai_font(self.fs(22)),
-                                 bg=ENTRY_BG, fg=TEXT_COLOR, relief="flat", bd=1,
-                                 insertbackground=TEXT_COLOR)
-                entry.pack(side="left", fill="x", expand=True, padx=(4, 0))
-
-                def _on_note(var, iid=item["item_id"]):
-                    a = self.app.session["answers"].get(iid)
-                    if a is not None:
-                        a["notes"] = var.get()
-                entry_var.trace_add("write", lambda *_, v=entry_var, iid=item["item_id"]: _on_note(v, iid))
+                self._build_note_editor(note_cell, row_bg, user_note, item["item_id"])
 
         session["overall_pass"] = overall_pass
         self.update_idletasks()
