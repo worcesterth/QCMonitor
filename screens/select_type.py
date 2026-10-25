@@ -50,7 +50,7 @@ class SelectTypeScreen(BaseScreen):
         self._thumbs = []
 
         card = self.card(self)
-        card_h = max(620, int(900 * self._s))
+        card_h = max(560, int(820 * self._s))
         card.place(relx=0.5, rely=0.5, anchor="center", width=self.CARD_W, height=card_h)
 
         self.card_header(card, "โปรแกรมตรวจคุณภาพหน้าจอ", size=self.fs(24))
@@ -60,7 +60,7 @@ class SelectTypeScreen(BaseScreen):
 
         self.title_label(body, "โปรดเลือกชนิดหน้าจอ", size=self.fs(36)).pack(pady=(10, 14))
 
-        thumb_h = max(74, int(94 * self._s))
+        thumb_h = max(58, int(72 * self._s))
         small_font = thai_font(self.fs(20))
 
         for info in _TYPES:
@@ -86,19 +86,19 @@ class SelectTypeScreen(BaseScreen):
                                  font=thai_font(self.fs(30), "bold"),
                                  bg=BTN_BG, fg=BTN_FG,
                                  justify="left", anchor="w",
-                                 padx=14, pady=10)
+                                 padx=14, pady=4)
             title_lbl.pack(fill="x", expand=True)
 
-            # "นิยาม" — plain text link, bottom-right, no box
-            info_btn = tk.Button(right, text="นิยาม",
-                                 font=thai_font(self.fs(22), "bold"),
-                                 bg=BTN_BG, fg="#3a3a3a",
-                                 relief="flat", bd=0, padx=10, pady=4,
-                                 activebackground=BTN_BG,
+            # "ℹ นิยาม" — bordered button (original style), bottom-right
+            info_btn = tk.Button(right, text="ℹ  นิยาม",
+                                 font=small_font,
+                                 bg=CARD_COLOR, fg="#3a3a3a",
+                                 relief="solid", bd=1, padx=8, pady=2,
+                                 activebackground="#e8e8e8",
                                  activeforeground="#111111",
                                  cursor="hand2",
                                  command=lambda i=info, ip=img_path: self._show_info(i, ip))
-            info_btn.pack(side="right", anchor="e")
+            info_btn.pack(side="right", anchor="e", padx=6, pady=4)
 
             # click bar / image / title → select type
             select_cmd = lambda k=info["key"]: self._select(k)
