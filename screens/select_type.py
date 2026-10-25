@@ -101,11 +101,11 @@ class SelectTypeScreen(BaseScreen):
 
             # click bar / image / title → select type
             select_cmd = lambda k=info["key"]: self._select(k)
-            for w in (bar, right, title_lbl) + ((img_lbl,) if thumb else ()):
+            for w in (bar, right, title_lbl) + ((img_lbl,) if img_lbl else ()):
                 w.bind("<Button-1>", lambda _, c=select_cmd: c())
 
             # hover (excluding info_btn)
-            hover_w = [bar, right, title_lbl] + ([img_lbl] if thumb else [])
+            hover_w = [bar, right, title_lbl] + ([img_lbl] if img_lbl else [])
             def _enter(_, ws=hover_w):
                 for w in ws: w.configure(bg=BTN_ACTIVE)
             def _leave(_, ws=hover_w):
