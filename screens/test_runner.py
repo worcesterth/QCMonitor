@@ -1,6 +1,7 @@
 import os
 import re
 import glob
+import threading
 import tkinter as tk
 from PIL import Image, ImageTk
 
@@ -417,10 +418,34 @@ class TestRunnerScreen(BaseScreen):
             return
         cw = self.img_canvas.winfo_width()  or self.app.winfo_width()  or 1280
         ch = self.img_canvas.winfo_height() or self.app.winfo_height() or 800
-        img = Image.open(path).convert("RGB")
-        img = img.resize((cw, ch), Image.BILINEAR)
-        self._img_ref = ImageTk.PhotoImage(img)
-        self.img_canvas.create_image(0, 0, anchor="nw", image=self._img_ref)
+        # show loading indicator while loading heavy tif files
+        self.img_canvas.create_text(
+            cw // 2, ch // 2, text="กำลังโหลด...",
+            fill="white", font=thai_font(self.fs(16)), tags="loading",
+        )
+        self.img_canvas.update_idletasks()
+
+        def _load():
+            try:
+                img = Image.open(path).convert("RGB")
+                img = img.resize((cw, ch), Image.BILINEAR)
+                photo = ImageTk.PhotoImage(img)
+            except Exception:
+                photo = None
+            self.after(0, lambda: _display(photo))
+
+        def _display(photo):
+            self.img_canvas.delete("all")
+            if photo:
+                self._img_ref = photo
+                self.img_canvas.create_image(0, 0, anchor="nw", image=self._img_ref)
+            else:
+                self.img_canvas.create_text(
+                    cw // 2, ch // 2, text="โหลดรูปไม่ได้",
+                    fill="red", font=thai_font(self.fs(14)),
+                )
+
+        threading.Thread(target=_load, daemon=True).start()
 
     def _stop_playback(self):
         if self._after_id:
