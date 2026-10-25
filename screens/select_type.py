@@ -75,7 +75,7 @@ class SelectTypeScreen(BaseScreen):
 
             # image (left)
             if thumb:
-                img_lbl = tk.Label(bar, image=thumb, bg=BTN_BG, padx=8, pady=6)
+                img_lbl = tk.Label(bar, image=thumb, bg=BTN_BG, padx=0, pady=0)
                 img_lbl.pack(side="left")
 
             # right side: title row (top) + info-btn row (bottom)
