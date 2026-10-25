@@ -88,7 +88,7 @@ class SelectTypeScreen(BaseScreen):
             title_lbl = tk.Label(right, text=info["label"],
                                  font=thai_font(self.fs(30), "bold"),
                                  bg=BTN_BG, fg=BTN_FG,
-                                 justify="left", anchor="w",
+                                 justify="center", anchor="center",
                                  padx=14, pady=2)
             title_lbl.pack(fill="x", expand=True)
 
