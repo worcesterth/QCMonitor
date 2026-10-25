@@ -155,17 +155,13 @@ class ComparisonScreen(BaseScreen):
                 cell = tk.Frame(row, bg=bg)
                 cell.grid(row=0, column=i, sticky="nsew")
 
+                # top_area — swaps between read-only display and edit widget
+                top_area = cell if not is_last else tk.Frame(cell, bg=bg)
                 if is_last:
-                    # pencil row at top — always visible
-                    top = tk.Frame(cell, bg=bg)
-                    top.pack(fill="x", padx=4, pady=(4, 0))
-                    pencil_btn = tk.Button(top, text="✏", font=small, bg=bg,
-                                           fg="#888888", relief="flat", bd=0,
-                                           padx=4, cursor="hand2")
-                    pencil_btn.pack(side="right")
+                    top_area.pack(fill="x")
 
                 # description Text (read-only display)
-                txt = tk.Text(cell, font=font, fg=fg, bg=bg,
+                txt = tk.Text(top_area, font=font, fg=fg, bg=bg,
                               wrap="word", padx=10, pady=pady,
                               relief="flat", borderwidth=0,
                               highlightthickness=0, cursor="arrow",
@@ -190,23 +186,32 @@ class ComparisonScreen(BaseScreen):
                 cell.bind("<Configure>", _refit)
 
                 if is_last:
-                    # edit frame (hidden) — multiline editable Text
-                    edit = tk.Frame(cell, bg=bg)
-                    edit_txt = tk.Text(edit, font=small, fg=TEXT_COLOR, bg=ENTRY_BG,
+                    # bottom_bar — always visible at bottom of cell
+                    bottom_bar = tk.Frame(cell, bg=bg)
+                    bottom_bar.pack(fill="x", pady=(0, 2))
+
+                    pencil_btn = tk.Button(bottom_bar, text="✏ แก้ไข", font=small,
+                                           bg=bg, fg="#888888", relief="flat", bd=0,
+                                           padx=6, cursor="hand2")
+                    pencil_btn.pack(side="right")
+
+                    ok_btn = tk.Button(bottom_bar, text="✓ บันทึก", font=small,
+                                       bg="#4caf50", fg="white", relief="flat",
+                                       bd=0, padx=8, cursor="hand2")
+                    # ok_btn not packed initially
+
+                    # edit widget inside top_area (hidden initially)
+                    edit_txt = tk.Text(top_area, font=small, fg=TEXT_COLOR, bg=ENTRY_BG,
                                        wrap="word", relief="solid", bd=1, height=4,
                                        insertbackground=TEXT_COLOR, padx=6, pady=4)
-                    edit_txt.pack(fill="x", padx=(6, 0))
-                    ok_btn = tk.Button(edit, text="✓ บันทึก", font=small, bg="#4caf50",
-                                       fg="white", relief="flat", bd=0, padx=8,
-                                       cursor="hand2")
-                    ok_btn.pack(anchor="e", padx=(4, 6), pady=(2, 2))
 
                     _desc = [text]
                     _ri   = row_idx
                     _fg   = fg
 
                     def _confirm(event=None, _disp=txt, _etxt=edit_txt,
-                                 _ed=edit, _d=_desc, _ri=_ri, _fg=_fg):
+                                 _pb=pencil_btn, _ob=ok_btn,
+                                 _d=_desc, _ri=_ri, _fg=_fg):
                         val = _etxt.get("1.0", "end-1c")
                         _d[0] = val
                         _disp.configure(state="normal")
@@ -216,17 +221,21 @@ class ComparisonScreen(BaseScreen):
                         _disp.configure(state="disabled")
                         if _ri < len(self._rows_data):
                             self._rows_data[_ri]["description"] = val
-                        _ed.pack_forget()
+                        _etxt.pack_forget()
                         _disp.pack(fill="x")
+                        _ob.pack_forget()
+                        _pb.pack(side="right")
                         self.update_idletasks()
                         self._canvas.configure(scrollregion=self._canvas.bbox("all"))
 
                     def _start(_disp=txt, _etxt=edit_txt,
-                               _ed=edit, _d=_desc):
+                               _pb=pencil_btn, _ob=ok_btn, _d=_desc):
+                        _disp.pack_forget()
                         _etxt.delete("1.0", "end")
                         _etxt.insert("1.0", _d[0])
-                        _disp.pack_forget()
-                        _ed.pack(fill="x", padx=2, pady=(4, 2))
+                        _etxt.pack(fill="x", padx=4, pady=(2, 0))
+                        _pb.pack_forget()
+                        _ob.pack(side="right")
                         _etxt.focus_set()
                         _etxt.mark_set("insert", "end")
 
