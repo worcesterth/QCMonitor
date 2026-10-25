@@ -76,10 +76,7 @@ class SelectTypeScreen(BaseScreen):
             bar = tk.Frame(body, bg=BTN_BG, cursor="hand2")
             bar.pack(fill="x", pady=3, padx=110)
 
-            # image — flush left
-            if thumb:
-                img_lbl = tk.Label(bar, image=thumb, bg=BTN_BG)
-                img_lbl.pack(side="left")
+            img_lbl = None  # image hidden for now
 
             # right side: title (top) + info link (bottom-right)
             right = tk.Frame(bar, bg=BTN_BG)
