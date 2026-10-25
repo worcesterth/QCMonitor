@@ -61,7 +61,7 @@ class SelectTypeScreen(BaseScreen):
         self.title_label(body, "โปรดเลือกชนิดหน้าจอ", size=self.fs(36)).pack(pady=(10, 14))
 
         thumb_h = max(64, int(80 * self._s))
-        small_font = thai_font(self.fs(20))
+        small_font = thai_font(self.fs(20))  # used for desc_lbl
 
         for info in _TYPES:
             img_path = os.path.join(_DISPLAY_DIR, info["img"])
@@ -86,27 +86,26 @@ class SelectTypeScreen(BaseScreen):
                                  font=thai_font(self.fs(30), "bold"),
                                  bg=BTN_BG, fg=BTN_FG,
                                  justify="left", anchor="w",
-                                 padx=14, pady=0)
-            title_lbl.pack(fill="x", expand=True)
+                                 padx=14, pady=4)
+            title_lbl.pack(fill="x")
 
-            # "ℹ นิยาม" — no border, plain
-            info_btn = tk.Button(right, text="ℹ  นิยาม",
-                                 font=small_font,
-                                 bg=BTN_BG, fg="#3a3a3a",
-                                 relief="flat", bd=0, padx=8, pady=2,
-                                 activebackground=BTN_ACTIVE,
-                                 activeforeground="#111111",
-                                 cursor="hand2",
-                                 command=lambda i=info, ip=img_path: self._show_info(i, ip))
-            info_btn.pack(side="right", anchor="e", padx=6, pady=1)
+            desc_lbl = tk.Label(right, text=info["desc"],
+                                font=small_font,
+                                bg=BTN_BG, fg=BTN_FG,
+                                justify="left", anchor="w",
+                                padx=14, pady=(0, 6),
+                                wraplength=1)
+            desc_lbl.pack(fill="x")
+            right.bind("<Configure>",
+                       lambda e, l=desc_lbl: l.configure(wraplength=max(40, e.width - 20)))
 
-            # click bar / image / title → select type
+            # click bar / image / title / desc → select type
             select_cmd = lambda k=info["key"]: self._select(k)
-            for w in (bar, right, title_lbl) + ((img_lbl,) if thumb else ()):
+            for w in (bar, right, title_lbl, desc_lbl) + ((img_lbl,) if thumb else ()):
                 w.bind("<Button-1>", lambda _, c=select_cmd: c())
 
-            # hover (excluding info_btn)
-            hover_w = [bar, right, title_lbl] + ([img_lbl] if thumb else [])
+            # hover
+            hover_w = [bar, right, title_lbl, desc_lbl] + ([img_lbl] if thumb else [])
             def _enter(_, ws=hover_w):
                 for w in ws: w.configure(bg=BTN_ACTIVE)
             def _leave(_, ws=hover_w):
@@ -124,43 +123,3 @@ class SelectTypeScreen(BaseScreen):
         self.app.session["screen_type"] = screen_type
         self.app.show("select_period")
 
-    def _show_info(self, info: dict, img_path: str):
-        popup = tk.Toplevel(self)
-        popup.title(info["label"].replace("\n", " "))
-        popup.configure(bg=CARD_COLOR)
-        popup.resizable(False, False)
-        popup.grab_set()
-
-        try:
-            img = Image.open(img_path).convert("RGB")
-            pw = 420
-            ph = int(img.height * pw / img.width)
-            img = img.resize((pw, ph), Image.LANCZOS)
-            photo = ImageTk.PhotoImage(img)
-            self._thumbs.append(photo)
-            tk.Label(popup, image=photo, bg=CARD_COLOR).pack(padx=20, pady=(16, 8))
-        except Exception:
-            pass
-
-        tk.Label(popup, text=info["label"],
-                 font=thai_font(self.fs(28), "bold"),
-                 bg=CARD_COLOR, fg=TEXT_COLOR,
-                 justify="center").pack(padx=20)
-
-        tk.Label(popup, text=info["desc"],
-                 font=thai_font(self.fs(24)),
-                 bg=CARD_COLOR, fg=TEXT_COLOR,
-                 justify="left", wraplength=400).pack(padx=20, pady=(10, 14))
-
-        tk.Button(popup, text="ปิด",
-                  font=thai_font(self.fs(24)),
-                  bg="#e0e0e0", fg=TEXT_COLOR,
-                  relief="flat", padx=20, pady=6,
-                  cursor="hand2", command=popup.destroy).pack(pady=(0, 16))
-
-        popup.update_idletasks()
-        w = popup.winfo_width()
-        h = popup.winfo_height()
-        x = (popup.winfo_screenwidth() - w) // 2
-        y = (popup.winfo_screenheight() - h) // 2
-        popup.geometry(f"+{x}+{y}")
