@@ -68,45 +68,23 @@ class SelectTypeScreen(BaseScreen):
 
         for info in _TYPES:
             img_path = os.path.join(_DISPLAY_DIR, info["img"])
-
-            # load original square PIL image for dynamic resize
-            try:
-                _raw = Image.open(img_path).convert("RGB")
-                w0, h0 = _raw.size
-                m = min(w0, h0)
-                orig_sq = _raw.crop(((w0-m)//2, (h0-m)//2, (w0+m)//2, (h0+m)//2))
-            except Exception:
-                orig_sq = None
-
             thumb = _load_thumb(img_path, thumb_h)
             if thumb:
                 self._thumbs.append(thumb)
 
-            # ── row: image (outside, left) + orange bar (right) ─────────
-            row = tk.Frame(body, bg=CARD_COLOR)
+            # ── row: fixed height = thumb_h, image left + bar right ─────
+            row = tk.Frame(body, bg=CARD_COLOR, height=thumb_h)
+            row.pack_propagate(False)
             row.pack(fill="x", pady=3, padx=110)
 
-            if orig_sq is not None:
-                img_lbl = tk.Label(row, image=thumb or "", bg=CARD_COLOR)
-                img_lbl.pack(side="left", padx=(0, 8))
-                _last_h = [0]
-                def _on_bar_resize(e, _sq=orig_sq, _lbl=img_lbl,
-                                   _lh=_last_h, _cache=self._thumbs):
-                    h = e.height
-                    if h < 10 or h == _lh[0]:
-                        return
-                    _lh[0] = h
-                    photo = ImageTk.PhotoImage(_sq.resize((h, h), Image.LANCZOS))
-                    _cache.append(photo)
-                    _lbl.configure(image=photo)
+            if thumb:
+                img_lbl = tk.Label(row, image=thumb, bg=CARD_COLOR)
+                img_lbl.pack(side="left", fill="y", padx=(0, 8))
             else:
                 img_lbl = None
-                _on_bar_resize = None
 
             bar = tk.Frame(row, bg=BTN_BG, cursor="hand2")
             bar.pack(side="left", fill="both", expand=True)
-            if _on_bar_resize:
-                bar.bind("<Configure>", _on_bar_resize)
 
             # right side: title (top) + info link (bottom-right)
             right = tk.Frame(bar, bg=BTN_BG)
