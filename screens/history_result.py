@@ -7,7 +7,7 @@ import tkinter as tk
 from tkinter import ttk
 from screens.base import (
     BaseScreen, BG_COLOR, CARD_COLOR, TEXT_COLOR, BORDER_CLR,
-    PASS_GREEN, FAIL_RED, thai_font, count_fc,
+    PASS_GREEN, FAIL_RED, ENTRY_BG, thai_font, count_fc,
 )
 from config import TEST_CONFIG
 
@@ -113,6 +113,58 @@ class HistoryResultScreen(BaseScreen):
                 note_lbl = lbl
         return note_lbl
 
+    def _build_note_editor(self, parent, bg, initial_note, eval_id, item_id):
+        """inline note editor: pencil icon → Entry + confirm → save to DB"""
+        import database as _db
+        f = tk.Frame(parent, bg=bg)
+        f.pack(fill="x", padx=8, pady=(2, 6))
+
+        note_var = tk.StringVar(value=initial_note)
+        small_font = thai_font(self.fs(22))
+
+        display_row = tk.Frame(f, bg=bg)
+        display_row.pack(fill="x")
+
+        note_lbl = tk.Label(display_row, textvariable=note_var,
+                            font=small_font, fg="#555555", bg=bg,
+                            anchor="w", justify="left", wraplength=300)
+        note_lbl.pack(side="left", fill="x", expand=True)
+
+        edit_row = tk.Frame(f, bg=bg)
+        entry = tk.Entry(edit_row, textvariable=note_var, font=small_font,
+                         bg=ENTRY_BG, fg=TEXT_COLOR, relief="solid", bd=1,
+                         insertbackground=TEXT_COLOR)
+        entry.pack(side="left", fill="x", expand=True)
+
+        def confirm(event=None):
+            val = note_var.get()
+            _db.update_answer_note(eval_id, item_id, val)
+            ev = self.app.session.get("history_eval", {})
+            if ev.get("answers", {}).get(item_id) is not None:
+                ev["answers"][item_id]["notes"] = val
+            edit_row.pack_forget()
+            display_row.pack(fill="x")
+            self.update_idletasks()
+            self._canvas.configure(scrollregion=self._canvas.bbox("all"))
+
+        def start_edit():
+            display_row.pack_forget()
+            edit_row.pack(fill="x")
+            entry.focus_set()
+            entry.icursor("end")
+
+        ok_btn = tk.Button(edit_row, text="✓", font=small_font,
+                           bg="#4caf50", fg="white", relief="flat",
+                           bd=0, padx=6, cursor="hand2", command=confirm)
+        ok_btn.pack(side="left", padx=(4, 0))
+        entry.bind("<Return>", confirm)
+        entry.bind("<Escape>", lambda _: confirm())
+
+        pencil_btn = tk.Button(display_row, text="✏", font=small_font,
+                               bg=bg, fg="#888888", relief="flat", bd=0,
+                               cursor="hand2", command=start_edit)
+        pencil_btn.pack(side="right")
+
     def _on_canvas_resize(self, e):
         self._canvas.itemconfig(self._win, width=e.width)
         self._refresh_note_wrap(e.width)
@@ -194,20 +246,44 @@ class HistoryResultScreen(BaseScreen):
                                          f"{note_prefix}: {ch_str}")
                             else:
                                 notes = f"{note_prefix}: {ch_str}"
-                    if user_note:
-                        notes = (notes + "\n" if notes else "") + f"*{user_note}"
                 else:
                     result_text = "ไม่ได้ตอบ"
                     fg = "#888888"
                     notes = ""
+                    user_note = ""
 
                 row_bg = CARD_COLOR if row_idx % 2 == 0 else ALT_ROW
                 row_idx += 1
-                note_lbl = self._build_row(self._body,
-                                           [f"  {item['title']}", result_text, notes],
-                                           row_bg, fg, thai_font(self.fs(26)), pady=8)
-                if note_lbl:
-                    self._note_labels.append(note_lbl)
+                font = thai_font(self.fs(26))
+
+                row = tk.Frame(self._body, bg=row_bg)
+                row.pack(fill="x")
+                for i, w in enumerate(self._widths):
+                    row.columnconfigure(i, minsize=w, weight=0)
+                row.columnconfigure(len(self._widths), weight=1)
+
+                tk.Label(row, text=f"  {item['title']}", font=font, fg=fg, bg=row_bg,
+                         anchor="w", padx=10, pady=8,
+                         wraplength=max(0, self._widths[0] - 12), justify="left"
+                         ).grid(row=0, column=0, sticky="nsew")
+                tk.Label(row, text=result_text, font=font, fg=fg, bg=row_bg,
+                         anchor="center", padx=10, pady=8,
+                         wraplength=max(0, self._widths[1] - 12), justify="center"
+                         ).grid(row=0, column=1, sticky="nsew")
+
+                note_cell = tk.Frame(row, bg=row_bg)
+                note_cell.grid(row=0, column=2, sticky="nsew")
+
+                if notes and ans:
+                    sys_lbl = tk.Label(note_cell, text=notes, font=font, fg=fg, bg=row_bg,
+                                       anchor="w", padx=10, pady=(8, 2),
+                                       justify="left", wraplength=200)
+                    sys_lbl.pack(anchor="w", fill="x")
+                    self._note_labels.append(sys_lbl)
+
+                if ans:
+                    self._build_note_editor(note_cell, row_bg, user_note,
+                                            ev["id"], item_id)
 
         self.update_idletasks()
         self._canvas.configure(scrollregion=self._canvas.bbox("all"))
