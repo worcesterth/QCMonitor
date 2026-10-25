@@ -60,7 +60,7 @@ class SelectTypeScreen(BaseScreen):
 
         self.title_label(body, "โปรดเลือกชนิดหน้าจอ", size=self.fs(36)).pack(pady=(10, 14))
 
-        thumb_h = max(80, int(100 * self._s))
+        thumb_h = max(64, int(80 * self._s))
         small_font = thai_font(self.fs(20))
 
         for info in _TYPES:
@@ -86,7 +86,7 @@ class SelectTypeScreen(BaseScreen):
                                  font=thai_font(self.fs(30), "bold"),
                                  bg=BTN_BG, fg=BTN_FG,
                                  justify="left", anchor="w",
-                                 padx=14, pady=2)
+                                 padx=14, pady=0)
             title_lbl.pack(fill="x", expand=True)
 
             # "ℹ นิยาม" — no border, plain
@@ -98,7 +98,7 @@ class SelectTypeScreen(BaseScreen):
                                  activeforeground="#111111",
                                  cursor="hand2",
                                  command=lambda i=info, ip=img_path: self._show_info(i, ip))
-            info_btn.pack(side="right", anchor="e", padx=6, pady=2)
+            info_btn.pack(side="right", anchor="e", padx=6, pady=1)
 
             # click bar / image / title → select type
             select_cmd = lambda k=info["key"]: self._select(k)
