@@ -106,7 +106,7 @@ def export_history_result(ev: dict, groups: list, filepath: str, copies: int = 1
     model_txt = f"หมายเลขครุภัณฑ์ {ev.get('screen_model','')}  " if ev.get("screen_model") else ""
 
     story = [
-        _p("รายงานผลการประเมินคุณภาพหน้าจอแสดงผลทางการแพทย์", size=20, bold=True, align="CENTER"),
+        _p("รายงานผลการประเมินคุณภาพจอแสดงผลทางการแพทย์", size=20, bold=True, align="CENTER"),
         Spacer(1, 4*mm),
         _p(f"โรงพยาบาล: {ev.get('hospital_name','')}", size=13),
         _p(f"จอภาพ: {stype} | รอบ: {period} | {rank_txt} | {model_txt} | ผู้ประเมิน {ev.get('evaluator_name','')} |  {display_date}", size=13),
@@ -248,10 +248,10 @@ def export_comparison(current: dict, baseline: dict, row_data: list, filepath: s
         base_disp_dt = base_dt_str
 
     now_txt  = f"ครั้งที่: {current.get('rank','')} |  {current.get('evaluator_name','')} | {curr_disp_dt}"
-    base_txt = f"ครั้งที่ (Baseline): {baseline.get('rank','')} |  {baseline.get('evaluator_name','')} | {base_disp_dt}"
+    base_txt = f"ครั้งที่ {baseline.get('rank','')} (Baseline)|  {baseline.get('evaluator_name','')} | {base_disp_dt}"
 
     story = [
-        _p("รายงานการเปรียบเทียบกับผล", size=20, bold=True, align="CENTER"),
+        _p("รายงานการเปรียบเทียบผลการประเมิน", size=20, bold=True, align="CENTER"),
         Spacer(1, 3*mm),
         _p(f"โรงพยาบาล: {current.get('hospital_name', '')} | จอภาพ: {cmp_stype} | รอบ: {cmp_period}", size=13),
         _p(f"{now_txt}", size=12),
@@ -271,8 +271,8 @@ def export_comparison(current: dict, baseline: dict, row_data: list, filepath: s
 
     data = [[
         _p("หัวข้อประเมิน",                      12, bold=True),
-        _p("Baseline",                            12, bold=True, align="CENTER"),
-        _p("ครั้งที่",                                 12, bold=True, align="CENTER"),
+        _p(f"ครั้งที่ {baseline.get('rank', '')} (Baseline)", 12, bold=True, align="CENTER"),
+        _p(f"ครั้งที่ {current.get('rank', '')}",       12, bold=True, align="CENTER"),
         _p("ผลการเปรียบเทียบ",                   12, bold=True),
         _p("คำอธิบายเพิ่มเติมจากการเปรียบเทียบ", 12, bold=True),
     ]]

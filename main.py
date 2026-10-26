@@ -68,6 +68,17 @@ class App(tk.Tk):
         self.minsize(900, 600)
         self.configure(bg=BG_COLOR)
 
+        # ── App icon ─────────────────────────────────────────────────────────
+        try:
+            from PIL import Image as _Img, ImageTk as _ITk
+            _icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                      "assets", "logo", "App_Logo.jpg")
+            _icon_img = _Img.open(_icon_path).convert("RGBA").resize((64, 64))
+            self._app_icon = _ITk.PhotoImage(_icon_img)
+            self.wm_iconphoto(True, self._app_icon)
+        except Exception:
+            pass
+
         # เปิดเต็มจอ
         self.after(0, self._maximize)
 

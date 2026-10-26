@@ -53,7 +53,7 @@ class SelectTypeScreen(BaseScreen):
         self._thumbs = []
 
         card = self.card(self)
-        card_h = max(560, int(820 * self._s))
+        card_h = max(500, int(720 * self._s))
         card.place(relx=0.5, rely=0.5, anchor="center", width=self.CARD_W, height=card_h)
 
         self.card_header(card, "โปรแกรมตรวจคุณภาพหน้าจอ", size=self.fs(24))
@@ -64,7 +64,7 @@ class SelectTypeScreen(BaseScreen):
         self.title_label(body, "โปรดเลือกชนิดหน้าจอ", size=self.fs(36)).pack(pady=(10, 14))
 
         thumb_h = max(78, int(96 * self._s))
-        small_font = thai_font(self.fs(20))  # used for desc_lbl
+        small_font = thai_font(self.fs(18))  # used for desc_lbl
 
         for info in _TYPES:
             img_path = os.path.join(_DISPLAY_DIR, info["img"])
@@ -97,15 +97,15 @@ class SelectTypeScreen(BaseScreen):
                                  padx=14, pady=2)
             title_lbl.pack(fill="x", expand=True)
 
-            info_btn = tk.Button(right, text="ℹ  นิยาม",
+            info_btn = tk.Button(bar, text="ℹ  นิยาม",
                                  font=small_font,
-                                 bg=BTN_BG, fg="#3a3a3a",
-                                 relief="flat", bd=0, padx=8, pady=2,
+                                 bg=BTN_BG, fg="#222222",
+                                 relief="flat", bd=0, padx=6, pady=1,
                                  activebackground=BTN_ACTIVE,
                                  activeforeground="#111111",
                                  cursor="hand2",
                                  command=lambda i=info, ip=img_path: self._show_info(i, ip))
-            info_btn.pack(side="right", anchor="e", padx=6, pady=1)
+            info_btn.place(relx=1.0, rely=1.0, anchor="se", x=-6, y=-4)
 
             # click bar / image / title → select type
             select_cmd = lambda k=info["key"]: self._select(k)

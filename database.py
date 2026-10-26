@@ -11,17 +11,13 @@ import sqlite3
 import json
 from datetime import datetime
 
-if getattr(sys, "frozen", False):
-    # Running as PyInstaller bundle — use persistent user data directory
-    import platform
-    if platform.system() == "Darwin":
-        _APP_DIR = os.path.expanduser("~/Library/Application Support/DesktopQC")
-    elif platform.system() == "Windows":
-        _APP_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "DesktopQC")
-    else:
-        _APP_DIR = os.path.expanduser("~/.DesktopQC")
+import platform as _platform
+if _platform.system() == "Darwin":
+    _APP_DIR = os.path.expanduser("~/Library/Application Support/DesktopQC")
+elif _platform.system() == "Windows":
+    _APP_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "DesktopQC")
 else:
-    _APP_DIR = os.path.dirname(os.path.abspath(__file__))
+    _APP_DIR = os.path.expanduser("~/.DesktopQC")
 
 DB_DIR  = os.path.join(_APP_DIR, "data")
 DB_PATH = os.path.join(DB_DIR, "screenqc.db")
