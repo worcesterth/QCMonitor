@@ -48,10 +48,13 @@ class TestRunnerScreen(BaseScreen):
         super().__init__(parent, app)
         self._img_ref         = None
         self._frames          = []
+        self._frame_cache     = {}   # idx -> PIL Image (pre-loaded)
         self._frame_idx       = 0
         self._after_id        = None
         self._slider_job      = None
         self._current_path    = None
+        self._frame_loading   = False
+        self._preload_done    = False
         self._has_channels    = False
         self._has_text_ch     = False
         self._text_ch_var     = tk.StringVar()
@@ -351,6 +354,8 @@ class TestRunnerScreen(BaseScreen):
 
     def _load_image(self, filename: str):
         self._stop_playback()
+        self._frame_cache.clear()
+        self._preload_done = False
         path = os.path.join(PATTERN_DIR, filename)
 
         if os.path.isdir(path):
@@ -362,17 +367,17 @@ class TestRunnerScreen(BaseScreen):
             if files:
                 self._frames     = files
                 self._frame_idx  = 0
-                self._is_playing = True
+                self._is_playing = False
                 self.slider.configure(to=len(files) - 1)
                 self._slider_var.set(0)
-                self.frame_counter.configure(text=f"1 / {len(files)}")
+                self.frame_counter.configure(text=f"0 / {len(files)}")
                 self.playpause_btn.configure(text="⏸ หยุด")
                 self.ctrl_bar.place(relx=0, rely=1.0, relwidth=1,
                                     height=int(52 * self._s), anchor="sw")
                 self.play_lbl.place(relx=0.5, rely=0.92, anchor="s")
                 self.replay_btn.pack(side="left", padx=2)
                 self._show_card_win()
-                self._play_next_frame()
+                self._start_preload(files)
                 return
 
         self._frames = []
@@ -382,8 +387,49 @@ class TestRunnerScreen(BaseScreen):
         self._show_card_win()
         self._show_single(path)
 
+    def _start_preload(self, files: list):
+        """โหลดทุก frame ล่วงหน้าใน background thread แล้วค่อยเล่น"""
+        total = len(files)
+        cw = self.img_canvas.winfo_width()  or self.app.winfo_width()  or 1280
+        ch = self.img_canvas.winfo_height() or self.app.winfo_height() or 800
+
+        # แสดง progress
+        self.img_canvas.delete("all")
+        prog_id = self.img_canvas.create_text(
+            cw // 2, ch // 2, text=f"กำลังโหลด 0 / {total}...",
+            fill="white", font=thai_font(self.fs(18)), justify="center",
+        )
+
+        def _preload():
+            for i, fp in enumerate(files):
+                try:
+                    img = Image.open(fp).convert("RGB")
+                    img = img.resize((cw, ch), Image.NEAREST)
+                    self._frame_cache[i] = img
+                except Exception:
+                    self._frame_cache[i] = None
+                # อัปเดต progress ทุก 8 frames
+                if i % 8 == 0 or i == total - 1:
+                    pct = int((i + 1) / total * 100)
+                    self.after(0, lambda t=i+1, p=pct: self.img_canvas.itemconfigure(
+                        prog_id, text=f"กำลังโหลด {t} / {total} ({p}%)"))
+            self.after(0, _on_done)
+
+        def _on_done():
+            self._preload_done = True
+            self._is_playing   = True
+            self._frame_idx    = 0
+            self.img_canvas.delete("all")
+            self._play_next_frame()
+
+        threading.Thread(target=_preload, daemon=True).start()
+
     def _play_next_frame(self):
         if not self._is_playing:
+            return
+        if self._frame_loading:
+            # รอให้ frame ก่อนหน้าโหลดเสร็จก่อน
+            self._after_id = self.after(20, self._play_next_frame)
             return
         if self._frame_idx >= len(self._frames):
             self._is_playing = False
@@ -398,7 +444,14 @@ class TestRunnerScreen(BaseScreen):
 
     def _show_frame(self, idx: int):
         total = len(self._frames)
-        self._show_single(self._frames[idx])
+        cached = self._frame_cache.get(idx)
+        if cached is not None:
+            photo = ImageTk.PhotoImage(cached)
+            self._img_ref = photo
+            self.img_canvas.delete("all")
+            self.img_canvas.create_image(0, 0, anchor="nw", image=self._img_ref)
+        else:
+            self._show_single(self._frames[idx])
         self.play_lbl.configure(text=f"{idx + 1} / {total}")
         self._slider_var.set(idx)
         self.frame_counter.configure(text=f"{idx + 1} / {total}")
@@ -418,25 +471,38 @@ class TestRunnerScreen(BaseScreen):
             return
         cw = self.img_canvas.winfo_width()  or self.app.winfo_width()  or 1280
         ch = self.img_canvas.winfo_height() or self.app.winfo_height() or 800
-        # show loading indicator while loading heavy tif files
+
+        # ถ้า frame นี้อยู่ใน cache แล้ว → แสดงทันที ไม่ต้องโหลดใหม่
+        if self._frames and path in self._frames:
+            idx = self._frames.index(path)
+            cached = self._frame_cache.get(idx)
+            if cached is not None:
+                photo = ImageTk.PhotoImage(cached)
+                self._img_ref = photo
+                self.img_canvas.create_image(0, 0, anchor="nw", image=self._img_ref)
+                return
+
         self.img_canvas.create_text(
             cw // 2, ch // 2, text="กำลังโหลด...",
             fill="white", font=thai_font(self.fs(16)), tags="loading",
         )
         self.img_canvas.update_idletasks()
 
+        self._frame_loading = True
+
         def _load():
             try:
                 img = Image.open(path).convert("RGB")
-                img = img.resize((cw, ch), Image.BILINEAR)
-                photo = ImageTk.PhotoImage(img)
+                img = img.resize((cw, ch), Image.NEAREST)
             except Exception:
-                photo = None
-            self.after(0, lambda: _display(photo))
+                img = None
+            self.after(0, lambda: _display(img))
 
-        def _display(photo):
+        def _display(img):
+            self._frame_loading = False
             self.img_canvas.delete("all")
-            if photo:
+            if img is not None:
+                photo = ImageTk.PhotoImage(img)
                 self._img_ref = photo
                 self.img_canvas.create_image(0, 0, anchor="nw", image=self._img_ref)
             else:
